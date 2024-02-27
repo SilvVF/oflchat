@@ -13,9 +13,7 @@ import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Strategy
 import io.silv.oflchat.OflChatApp
-import java.sql.Connection
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object ConnectionHelper {
@@ -68,7 +66,7 @@ object ConnectionHelper {
 
     }
 
-    suspend fun advertise(): Boolean {
+    suspend fun advertise(): Result<Boolean> {
         return suspendCoroutine { continuation ->
             client.startAdvertising(
                 "",
@@ -77,10 +75,10 @@ object ConnectionHelper {
                 advertisingOptions
             )
                 .addOnSuccessListener {
-                    continuation.resume(true)
+                    continuation.resume(Result.success(true))
                 }
                 .addOnFailureListener {
-                    continuation.resumeWithException(it)
+                    continuation.resumeWith(Result.failure(it))
                 }
         }
     }
@@ -97,7 +95,7 @@ object ConnectionHelper {
         }
     }
 
-    suspend fun discover(): Boolean {
+    suspend fun discover(): Result<Boolean> {
         return suspendCoroutine { continuation ->
             client.startDiscovery(
                 SERVICE_ID,
@@ -105,10 +103,10 @@ object ConnectionHelper {
                 discoveryOptions
             )
                 .addOnSuccessListener {
-                    continuation.resume(true)
+                    continuation.resume(Result.success(true))
                 }
                 .addOnFailureListener {
-                    continuation.resumeWithException(it)
+                    continuation.resumeWith(Result.failure(it))
                 }
         }
     }
