@@ -204,10 +204,10 @@ fun ConversationsTopBar(
     actions: @Composable RowScope.() -> Unit,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     colors: TopAppBarColors = TopAppBarDefaults.largeTopAppBarColors(
-        scrolledContainerColor = Color.Transparent,
-        containerColor = Color.Transparent
+        scrolledContainerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background
     ),
-    scrollBehavior: TopAppBarScrollBehavior = ConversationsTopBarDefaults.scrollBehavior()
+    scrollBehavior: TopAppBarScrollBehavior
 ) {
     TopAppBarCopy(
         iconExpanded = iconExpanded,
@@ -320,7 +320,7 @@ private fun TopAppBarCopy(
                     actions = actions,
                     windowInsets = windowInsets,
                     colors = colors,
-                    maxHeight = 64.dp + 172.dp,
+                    maxHeight = 64.dp + 216.dp,
                     pinnedHeight = 64.dp,
                     scrollBehavior = scrollBehavior
                 )
