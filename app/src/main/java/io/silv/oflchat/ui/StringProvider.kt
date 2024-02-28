@@ -2,6 +2,7 @@ package io.silv.oflchat.ui
 
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.compose.runtime.staticCompositionLocalOf
 
 interface StringProvider {
 
@@ -14,5 +15,7 @@ interface StringProvider {
             override fun getString(id: Int) = context.getString(id)
             override fun getString(id: Int, vararg formatArgs: Any) = context.getString(id, formatArgs)
         }
+
+        val LocalStringProvider = staticCompositionLocalOf<StringProvider> { error("Not provided yet") }
     }
 }

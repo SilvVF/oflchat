@@ -3,11 +3,18 @@ package io.silv.oflchat
 import android.app.Application
 import android.os.PowerManager
 import androidx.core.content.getSystemService
+import timber.log.Timber
+
 
 class OflChatApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
         instance = this
     }
 
