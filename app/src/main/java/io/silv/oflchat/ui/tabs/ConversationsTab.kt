@@ -133,7 +133,7 @@ private fun ConversationScreenContent(
             if (scrolled) {
                 FilledIconButton(
                     modifier = Modifier
-                        .padding(12.dp)
+                        .padding(22.dp)
                         .size(50.dp)
                         .align(Alignment.BottomCenter),
                     onClick = {
