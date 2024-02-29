@@ -5,6 +5,7 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.DecayAnimationSpec
+import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDecay
@@ -221,7 +222,9 @@ fun ConversationsTopBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val MaxBackDropHeight = 216.dp
+private val PinnedAppBarHeight = 64.dp
+
 @Composable
 private fun TopAppBarCopy(
     modifier: Modifier = Modifier,
@@ -236,7 +239,7 @@ private fun TopAppBarCopy(
 ) {
     // Sets the app bar's height offset to collapse the entire bar's height when content is
     // scrolled.
-    val heightOffsetLimit = with(LocalDensity.current) { -64.dp.toPx() }
+    val heightOffsetLimit = with(LocalDensity.current) { -MaxBackDropHeight.toPx() }
     SideEffect {
         if (scrollBehavior?.state?.heightOffsetLimit != heightOffsetLimit) {
             scrollBehavior?.state?.heightOffsetLimit = heightOffsetLimit
@@ -291,7 +294,7 @@ private fun TopAppBarCopy(
     Surface(modifier = modifier.then(appBarDragModifier), color = appBarContainerColor) {
         BoxWithConstraints {
             if (maxWidth > maxHeight) {
-                val height = LocalDensity.current.run { 64.dp.toPx() }
+                val height = LocalDensity.current.run { PinnedAppBarHeight.toPx() }
                 TopAppBarLayout(
                     modifier = Modifier
                         .windowInsetsPadding(windowInsets)
@@ -320,8 +323,8 @@ private fun TopAppBarCopy(
                     actions = actions,
                     windowInsets = windowInsets,
                     colors = colors,
-                    maxHeight = 64.dp + 216.dp,
-                    pinnedHeight = 64.dp,
+                    maxHeight = PinnedAppBarHeight + MaxBackDropHeight,
+                    pinnedHeight = PinnedAppBarHeight,
                     scrollBehavior = scrollBehavior
                 )
             }
@@ -428,7 +431,7 @@ private fun TwoRowsTopAppBar(
                     .windowInsetsPadding(windowInsets)
                     // clip after padding so we don't show the title over the inset area
                     .clipToBounds(),
-                heightPx = with(LocalDensity.current) { 64.dp.toPx() },
+                heightPx = with(LocalDensity.current) { PinnedAppBarHeight.toPx() },
                 navigationIconContentColor =
                 colors.navigationIconContentColor,
                 titleContentColor = colors.titleContentColor,
@@ -493,12 +496,16 @@ private fun BackdropLayout(
         val backdropPlaceable = measurables.first().measure(constraints.copy(maxHeight = maxHeightPx.roundToInt()))
         val layoutHeight =  maxHeightPx - pinnedHeightPx + (scrollBehavior?.state?.heightOffset ?: 0f)
 
-        val scrollOffset = (scrollBehavior?.state?.heightOffset ?: 0f) * 0.6f
+        val scrollOffset = lerp(
+            0f,
+            scrollBehavior?.state?.heightOffset ?: 0f,
+            EaseInOutCubic.transform(scrollBehavior?.state?.collapsedFraction ?: 0f)
+        )
 
         layout(constraints.maxWidth, layoutHeight.roundToInt()) {
             backdropPlaceable.placeRelative(
                 0,
-                (0 + (scrollOffset).roundToInt()).coerceAtLeast(-64.dp.roundToPx())
+                (0 + (scrollOffset).roundToInt()).coerceAtLeast(-PinnedAppBarHeight.roundToPx())
             )
         }
     }
