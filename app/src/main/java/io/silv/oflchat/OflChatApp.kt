@@ -3,6 +3,7 @@ package io.silv.oflchat
 import android.app.Application
 import android.os.PowerManager
 import androidx.core.content.getSystemService
+import io.silv.oflchat.helpers.ConnectionHelper
 import timber.log.Timber
 
 
@@ -16,6 +17,11 @@ class OflChatApp : Application() {
         }
 
         instance = this
+        ConnectionHelper.listen(this)
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
     }
 
     companion object {

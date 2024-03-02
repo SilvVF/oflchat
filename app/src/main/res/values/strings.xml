@@ -11,5 +11,6 @@
     <string name="profile_icon">profile picture</string>
     <string name="scroll_to_top">scroll to top</string>
     <string name="delete">delete</string>
+    <string name="back">back</string>
     <string name="archive">archive</string>
 </resources>

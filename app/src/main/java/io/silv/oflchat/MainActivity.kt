@@ -7,28 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import io.silv.oflchat.helpers.ConnectionHelper
-import io.silv.oflchat.helpers.PreferenceHelper
-import io.silv.oflchat.ui.tabs.ConversationsTab
+import io.silv.oflchat.ui.screens.ConversationsScreen
+import io.silv.oflchat.ui.screens.PermissionsScreen
 import io.silv.oflchat.ui.theme.OflchatTheme
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -38,62 +25,37 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            DisposableEffect(Unit) {
-                lifecycleScope.launch {
-                    lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        PreferenceHelper.alwaysAdvertise.changes()
-                            .collectLatest { advertise ->
-                                if (advertise) {
-                                    ConnectionHelper.advertise()
-                                } else {
-                                    ConnectionHelper.stopAdvertising()
-                                }
-                            }
-                    }
-                }
-                onDispose { ConnectionHelper.stopAdvertising() }
-            }
-
-
             OflchatTheme {
                 // A surface container using the 'background' color from the theme
-                TabNavigator(
-                    ConversationsTab
-                ) { tabNavigator ->
-                    Scaffold(
-                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                        modifier = Modifier.fillMaxSize(),
-                        bottomBar = {
-//                            val tabs = remember { listOf(ConversationsTab, DiscoverTab, SettingsTab) }
-//
-//                            NavigationBar(Modifier.height(72.dp)) {
-//                                tabs.fastForEach { tab ->
-//                                    NavigationBarItem(
-//                                        selected = tabNavigator.current == tab,
-//                                        onClick = { tabNavigator.current = tab },
-//                                        icon = {
-//                                            Icon(
-//                                                painter = tab.options.icon ?: return@NavigationBarItem,
-//                                                contentDescription = tab.options.title
-//                                            )
-//                                        }
-//                                    )
-//                                }
-//                            }
-                        }
-                    ) { paddingValues ->
-                        Surface(color = MaterialTheme.colorScheme.background) {
-                            Box(
-                                Modifier
-                                    .padding(paddingValues)
-                                    .consumeWindowInsets(paddingValues)
-                            ) {
-                                TabCrossFadeTransition(tabNavigator)
-                            }
-                        }
-                    }
+                Navigator(
+                    listOf(
+                        ConversationsScreen,
+                        PermissionsScreen()
+                    )
+                ) { navigator ->
+                    CrossfadeTransition(navigator)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CrossfadeTransition(
+    navigator: Navigator,
+    animationSpec: FiniteAnimationSpec<Float> = tween(),
+    label: String = "Crossfade",
+    modifier: Modifier = Modifier,
+    content: @Composable (Screen) -> Unit = { it.Content() }
+) {
+    Crossfade(
+        targetState = navigator.lastItem,
+        animationSpec = animationSpec,
+        modifier = modifier,
+        label = label
+    ) { screen ->
+        navigator.saveableState("transition", screen) {
+            content(screen)
         }
     }
 }

@@ -64,7 +64,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-private val ConversationItemHeight = 52.dp
+private val ConversationItemHeight = 50.dp
 
 object DarkColors {
 

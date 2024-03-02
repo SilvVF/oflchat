@@ -1,27 +1,35 @@
 package io.silv.oflchat.helpers
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionType
+import com.google.android.gms.nearby.connection.ConnectionsClient
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.PayloadCallback
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import io.silv.oflchat.OflChatApp
 import io.silv.oflchat.state_holders.PermissionState
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
-object ConnectionHelper{
+object ConnectionHelper {
 
     data class ConnectionRequest(
         val endpointId: String,
@@ -33,137 +41,101 @@ object ConnectionHelper{
         val info: DiscoveredEndpointInfo
     )
 
-    val requestQueue = mutableStateListOf<ConnectionRequest>()
-    val connections = mutableStateMapOf<String, ConnectionResolution>()
+    val connections = mutableStateMapOf<String, Int>()
+    val endpoints = mutableStateMapOf<String, DiscoveredEndpointInfo>()
 
-    val endpoints = mutableStateListOf<Endpoint>()
+
     private val permissionState by lazy { PermissionState(OflChatApp.instance) }
-
-    var advertising by mutableStateOf(false)
-        private set
-
-    var discovering by mutableStateOf(false)
-        private set
-
     private const val SERVICE_ID: String = "io.silv.oflchat"
 
     private val advertisingOptions by lazy {
         AdvertisingOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
             .setConnectionType(ConnectionType.BALANCED)
-            .setLowPower(OflChatApp.isLowPower())
             .build()
     }
 
     private val discoveryOptions by lazy {
         DiscoveryOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
-            .setLowPower(OflChatApp.isLowPower())
             .build()
     }
 
-    private val client by lazy {
-        Nearby.getConnectionsClient(OflChatApp.instance)
+    private lateinit var client: ConnectionsClient
+
+    fun sendData(string: String, id: String) {
+        client.sendPayload(id, Payload.fromBytes(string.toByteArray()))
     }
 
-
-    private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
-        override fun onConnectionInitiated(
-            endpointId: String,
-            connectionInfo: ConnectionInfo
-        ) {
-            requestQueue.add(ConnectionRequest(endpointId, connectionInfo))
-        }
-        override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
-            requestQueue.removeAll { it.endpointId == endpointId }
-            connections[endpointId] = result
-        }
-
-        override fun onDisconnected(endpointId: String) {
-            connections.remove(endpointId)
-        }
-    }
-
-    suspend fun advertise(): Result<Boolean> {
-
-        when {
-            !permissionState.allGranted ->
-                return Result.failure(PermissionsMissing())
-            advertising ->
-                return Result.failure(AlreadyAdvertising())
-        }
-
-        val username = PreferenceHelper.username.get()
-
-        return suspendCoroutine { continuation ->
+    @OptIn(DelicateCoroutinesApi::class)
+    fun listen(context: Context): Job = GlobalScope.launch {
+        client = Nearby.getConnectionsClient(context)
+        launch(Dispatchers.IO) {
             client.startAdvertising(
-                username,
+                "Pixel",
                 SERVICE_ID,
-                connectionLifecycleCallback,
+                object : ConnectionLifecycleCallback() {
+                    override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
+                        client.acceptConnection(
+                            id,
+                            object : PayloadCallback() {
+                                override fun onPayloadReceived(id: String, payload: Payload) {
+                                    if (payload.type == Payload.Type.BYTES) {
+                                        val receivedBytes = payload.asBytes()
+                                        Timber.d("received bytes ${receivedBytes?.decodeToString()}")
+                                    }
+                                }
+                                override fun onPayloadTransferUpdate(id: String, update: PayloadTransferUpdate) {
+                                }
+                            }
+                        )
+                    }
+                    override fun onConnectionResult(id: String, resolution: ConnectionResolution) {
+                        when (resolution.status.statusCode) {
+                            ConnectionsStatusCodes.STATUS_OK -> {
+                                connections[id] = ConnectionsStatusCodes.STATUS_OK
+                            }
+                            ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
+                                Timber.d("$id STATUS_CONNECTION_REJECTED")
+                                connections.remove(id)
+                            }
+                            ConnectionsStatusCodes.STATUS_ERROR -> {
+                                Timber.d("$id STATUS_ERROR")
+                                connections.remove(id)
+                            }
+                        }
+                    }
+                    override fun onDisconnected(id: String) {
+                        connections.remove(id)
+                    }
+                },
                 advertisingOptions
             )
-                .addOnSuccessListener {
-                    Timber.i("Started Advertising")
-                    advertising = true
-                    continuation.resume(Result.success(true))
-                }
-                .addOnFailureListener {
-                    Timber.d(it)
-                    advertising = false
-                    continuation.resumeWith(Result.failure(it))
-                }
+            client.startDiscovery(
+                "Pixel",
+                object: EndpointDiscoveryCallback() {
+                    override fun onEndpointFound(id: String, info: DiscoveredEndpointInfo) {
+                        endpoints[id] = info
+                    }
+                    override fun onEndpointLost(id: String) {
+                        endpoints.remove(id)
+                    }
+                },
+                discoveryOptions
+            )
         }
-    }
-
-    private val endpointCallback = object : EndpointDiscoveryCallback() {
-        override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            endpoints.add(Endpoint(endpointId, info))
-        }
-        override fun onEndpointLost(endpointId: String) {
-            val idxToRemove =  endpoints.indexOfFirst { it.id == endpointId }
-            if (idxToRemove != -1) {
-                endpoints.removeAt(idxToRemove)
+        launch(Dispatchers.IO) {
+            snapshotFlow { connections }.collectLatest {
+                while (true) {
+                    it.forEach {
+                        sendData("hello", it.key)
+                    }
+                    delay(10000)
+                }
             }
         }
     }
 
-    suspend fun discover(): Result<Boolean> {
-
-        when {
-            !permissionState.allGranted ->
-                return Result.failure(PermissionsMissing())
-            discovering ->
-                return Result.failure(AlreadyDiscovering())
-        }
-
-        return suspendCoroutine { continuation ->
-            client.startDiscovery(
-                SERVICE_ID,
-                endpointCallback,
-                discoveryOptions
-            )
-                .addOnSuccessListener {
-                    Timber.i("Started discovery")
-                    discovering = true
-                    continuation.resume(Result.success(true))
-                }
-                .addOnFailureListener {
-                    Timber.d(it)
-                    discovering = false
-                    continuation.resumeWith(Result.failure(it))
-                }
-        }
-    }
-
-    fun stopAdvertising() {
-        client.stopAdvertising()
-        advertising = false
-    }
-
-    fun stopDiscovery() {
-        client.stopDiscovery()
-        discovering = false
-    }
 
     class PermissionsMissing: Exception("Missing Permissions")
     class AlreadyDiscovering: Exception("Already in discovering state")

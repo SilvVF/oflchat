@@ -46,24 +46,18 @@ class PermissionState(context: Context) {
     companion object {
         val defaultPermissions = buildList {
             add(Manifest.permission.ACCESS_WIFI_STATE)
-            if (Build.VERSION.SDK_INT <= 31) {
-                add(Manifest.permission.CHANGE_WIFI_STATE)
-            }
-            if (Build.VERSION.SDK_INT <= 30) {
-                add(Manifest.permission.BLUETOOTH)
-                add(Manifest.permission.BLUETOOTH_ADMIN)
-            }
+            add(Manifest.permission.CHANGE_WIFI_STATE)
+            add(Manifest.permission.BLUETOOTH)
+            add(Manifest.permission.BLUETOOTH_ADMIN)
             add(Manifest.permission.ACCESS_COARSE_LOCATION)
             add(Manifest.permission.ACCESS_FINE_LOCATION)
-            if (Build.VERSION.SDK_INT <= 31) {
-                add(Manifest.permission.ACCESS_FINE_LOCATION)
-            }
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
             if (Build.VERSION.SDK_INT >= 31) {
                 add(Manifest.permission.BLUETOOTH_ADVERTISE)
-                add( Manifest.permission.BLUETOOTH_CONNECT)
+                add(Manifest.permission.BLUETOOTH_CONNECT)
                 add(Manifest.permission.BLUETOOTH_SCAN)
             }
-            if(Build.VERSION.SDK_INT >= 33) {
+            if (Build.VERSION.SDK_INT >= 33) {
                 add(Manifest.permission.NEARBY_WIFI_DEVICES)
             }
         }

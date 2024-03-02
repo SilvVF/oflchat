@@ -1,4 +1,4 @@
-package io.silv.oflchat.ui.tabs
+package io.silv.oflchat.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Sms
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -26,15 +28,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.navigator.tab.Tab
-import cafe.adriel.voyager.navigator.tab.TabOptions
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import io.silv.oflchat.R
 import io.silv.oflchat.core.model.Conversation
 import io.silv.oflchat.helpers.ConnectionHelper
@@ -46,27 +48,22 @@ import io.silv.oflchat.ui.theme.OflchatTheme
 import io.silv.oflchat.viewmodels.ConversationScreenModel
 import kotlinx.coroutines.launch
 
-object ConversationsTab: Tab {
-
-    override val options: TabOptions
-        @Composable get() = TabOptions(
-            index = 0u,
-            title = stringResource(R.string.conversations_tab_title),
-            icon = rememberVectorPainter(image = Icons.AutoMirrored.Rounded.Message)
-        )
+object ConversationsScreen: Screen {
 
     @Composable
     override fun Content() {
 
         val snackbarHostState = remember { SnackbarHostState() }
         val screenModel = rememberScreenModel { ConversationScreenModel() }
+        val navigator = LocalNavigator.currentOrThrow
 
         val conversations by screenModel.conversations.collectAsState()
 
         ConversationScreenContent(
-            requestQueueProvider = { screenModel.requests },
+            requestQueueProvider = { emptyList() },
             conversationProvider = { conversations },
-            snackBarHostStateProvider = { snackbarHostState }
+            snackBarHostStateProvider = { snackbarHostState },
+            navigateToConnections = { navigator.push(ConnectionsScreen) }
         )
     }
 }
@@ -75,12 +72,25 @@ object ConversationsTab: Tab {
 private fun ConversationScreenContent(
     requestQueueProvider: () -> List<ConnectionHelper.ConnectionRequest>,
     conversationProvider: () -> List<Conversation>,
-    snackBarHostStateProvider: () -> SnackbarHostState
+    snackBarHostStateProvider: () -> SnackbarHostState,
+    navigateToConnections: () -> Unit
 ) {
     val scrollBehavior = ConversationsTopBarDefaults.scrollBehavior()
     
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostStateProvider()) },
+        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = navigateToConnections,
+                shape = CircleShape,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Sms,
+                    contentDescription = stringResource(id = R.string.discover_tab_title)
+                )
+            }
+        },
         topBar = {
             val text = stringResource(id = R.string.conversations_tab_title)
             
@@ -129,7 +139,6 @@ private fun ConversationScreenContent(
             ) {
                 conversationTestData()
             }
-
             if (scrolled) {
                 FilledIconButton(
                     modifier = Modifier
@@ -162,7 +171,8 @@ fun ConversationScreenPreview() {
         ConversationScreenContent(
             requestQueueProvider = { emptyList() },
             conversationProvider = { emptyList() },
-            snackBarHostStateProvider = { snackBarHostState }
+            snackBarHostStateProvider = { snackBarHostState },
+            navigateToConnections = {}
         )
     }
 }
