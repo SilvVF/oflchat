@@ -28,3 +28,6 @@ SELECT * FROM conversationEntity;
 
 selectById:
 SELECT * FROM conversationEntity WHERE _id = :id;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

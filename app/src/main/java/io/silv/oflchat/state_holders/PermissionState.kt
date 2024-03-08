@@ -1,66 +1,46 @@
 package io.silv.oflchat.state_holders
 
-import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import timber.log.Timber
 
-@Composable
-fun rememberPermissionState(
-    context: Context = LocalContext.current
-) = remember {
-    PermissionState(context)
-}
 
-class PermissionState(context: Context) {
+class PermissionState(
+    private val context: Context,
+    private val permissions: List<String>
+) {
 
     private val permissionToState = mutableStateMapOf<String, Boolean>()
 
     init {
-        for (permission in defaultPermissions) {
-            permissionToState[permission] =
-                context.checkSelfPermission(permission) ==
-                        PackageManager.PERMISSION_GRANTED
-        }
+        refresh()
     }
 
     val allGranted by derivedStateOf {
         (permissionToState.values
             .all { granted -> granted }
                 && permissionToState.isNotEmpty()
-        ) || defaultPermissions.isEmpty()
+        ) || permissions.isEmpty()
     }
 
-    fun onResult(results: Map<String, Boolean>) {
-        for ((permission, granted) in results) {
-            permissionToState[permission] = granted
+    fun refresh() {
+        for (permission in permissions) {
+            permissionToState[permission] =
+                context.checkSelfPermission(permission) ==
+                        PackageManager.PERMISSION_GRANTED
         }
     }
 
-    companion object {
-        val defaultPermissions = buildList {
-            add(Manifest.permission.ACCESS_WIFI_STATE)
-            add(Manifest.permission.CHANGE_WIFI_STATE)
-            add(Manifest.permission.BLUETOOTH)
-            add(Manifest.permission.BLUETOOTH_ADMIN)
-            add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            add(Manifest.permission.ACCESS_FINE_LOCATION)
-            add(Manifest.permission.ACCESS_FINE_LOCATION)
-            if (Build.VERSION.SDK_INT >= 31) {
-                add(Manifest.permission.BLUETOOTH_ADVERTISE)
-                add(Manifest.permission.BLUETOOTH_CONNECT)
-                add(Manifest.permission.BLUETOOTH_SCAN)
-            }
-            if (Build.VERSION.SDK_INT >= 33) {
-                add(Manifest.permission.NEARBY_WIFI_DEVICES)
-            }
+    fun checkAllGranted(): Boolean {
+        return permissions.all {
+            val res = context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+            permissionToState[it] = res
+            res
+        }.also {
+            Timber.d(it.toString())
         }
-            .toTypedArray()
     }
 }

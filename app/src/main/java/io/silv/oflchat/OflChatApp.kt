@@ -1,6 +1,8 @@
 package io.silv.oflchat
 
+import android.Manifest
 import android.app.Application
+import android.os.Build
 import android.os.PowerManager
 import androidx.core.content.getSystemService
 import io.silv.oflchat.helpers.ConnectionHelper
@@ -17,11 +19,7 @@ class OflChatApp : Application() {
         }
 
         instance = this
-        ConnectionHelper.listen(this)
-    }
-
-    override fun onTerminate() {
-        super.onTerminate()
+        ConnectionHelper.initialize(this)
     }
 
     companion object {
@@ -30,6 +28,26 @@ class OflChatApp : Application() {
         fun isLowPower(): Boolean {
             val powerManager = instance.getSystemService<PowerManager>()
             return powerManager?.isPowerSaveMode == true
+        }
+
+        val defaultPermissions by lazy {
+            buildList {
+                add(Manifest.permission.ACCESS_WIFI_STATE)
+                add(Manifest.permission.CHANGE_WIFI_STATE)
+                add(Manifest.permission.BLUETOOTH)
+                add(Manifest.permission.BLUETOOTH_ADMIN)
+                add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+                if (Build.VERSION.SDK_INT >= 31) {
+                    add(Manifest.permission.BLUETOOTH_ADVERTISE)
+                    add(Manifest.permission.BLUETOOTH_CONNECT)
+                    add(Manifest.permission.BLUETOOTH_SCAN)
+                }
+                if (Build.VERSION.SDK_INT >= 33) {
+                    add(Manifest.permission.NEARBY_WIFI_DEVICES)
+                }
+            }
         }
     }
 }

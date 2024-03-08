@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import timber.log.Timber
 
 /**
  * Modified from https://github.com/aniyomiorg/aniyomi AndroidPreference
@@ -60,6 +61,7 @@ sealed class DatastorePreference<T>(
         return try {
             read(dataStore, key, defaultValue)
         } catch (e: ClassCastException) {
+            Timber.d(e)
             delete()
             defaultValue
         }

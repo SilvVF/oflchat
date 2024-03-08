@@ -9,18 +9,15 @@ import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.EventProducer
+import timber.log.Timber
 
 
 class DiscoverScreenModel : ScreenModel, EventProducer<DiscoverScreenModel.DiscoverEvent> by EventProducer.default() {
 
     val endpoints by derivedStateOf {
-        ConnectionHelper.endpoints.keys.toList()
+        Timber.d( ConnectionHelper.endpoints.entries.map { Pair(it.key, it.value) }.toString())
+        ConnectionHelper.endpoints.entries.map { Pair(it.key, it.value) }
     }
-
-    val connections by derivedStateOf {
-        ConnectionHelper.connections.keys.toList()
-    }
-
 
     sealed interface DiscoverEvent {
 

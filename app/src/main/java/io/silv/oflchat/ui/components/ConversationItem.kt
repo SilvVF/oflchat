@@ -43,6 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -68,16 +70,23 @@ private val ConversationItemHeight = 50.dp
 
 object DarkColors {
 
-    val list: List<Int> = listOf(
-        R.color.green,
-        R.color.pink,
-        R.color.orange,
-        R.color.orange_alternate,
-        R.color.blue,
-        R.color.blue_mid,
-        R.color.brown,
-        R.color.green_mid,
-        R.color.pink_high
+    val list = listOf(
+        listOf(
+            R.color.green,
+            R.color.green_mid,
+        ),
+        listOf(
+            R.color.orange_alternate,
+            R.color.orange,
+        ),
+        listOf(
+            R.color.blue,
+            R.color.blue_mid,
+        ),
+        listOf(
+            R.color.pink,
+            R.color.pink_high
+        )
     )
 }
 
@@ -89,15 +98,30 @@ object ConversationItemDefaults {
         text: String,
         textStyle: androidx.compose.ui.text.TextStyle,
     ) {
-        val id = remember { DarkColors.list.random(Random(text.hashCode())) }
-        val c = colorResource(id = id)
+        val ids = remember {
+            val idx = Random(text.hashCode()).nextInt(0, DarkColors.list.size)
+            DarkColors.list[idx]
+        }
+        val c1 = colorResource(id = ids.first())
+        val c2 = colorResource(id = ids.last())
 
         val char = remember(text) { text.first().uppercase() }
 
         Box(
             modifier = modifier
                 .clip(CircleShape)
-                .background(c)
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                c1,
+                                c2,
+                            ),
+                            startY = 0f,
+                            endY = 80f
+                        )
+                    )
+                }
         ) {
             Text(
                 text = char,
@@ -438,10 +462,10 @@ fun LazyListScope.conversationTestData() {
         buildList {
             repeat(100) {
                 val participants =
-                    listOf("dafsdf", "dfasdf", "dfakdjfk", "dkjfaksjdf").take(kotlin.random.Random.nextInt(1, 5))
+                    listOf("dafsdf", "dfasdf", "dfakdjfk", "dkjfaksjdf").take(Random.nextInt(1, 5))
                 val unread = listOf(0, 1).random()
-                val lastReceived = java.time.LocalDateTime.now()
-                    .minusDays(kotlin.random.Random.nextInt(0, 100).toLong())
+                val lastReceived = LocalDateTime.now()
+                    .minusDays(Random.nextInt(0, 100).toLong())
                     .toEpochSecond(java.time.ZoneOffset.UTC)
                 add(
                     ConversationItemTestData(

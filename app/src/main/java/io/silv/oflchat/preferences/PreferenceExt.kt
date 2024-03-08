@@ -26,6 +26,16 @@ inline fun <reified T : Enum<T>> PreferenceStore.getEnum(
     )
 }
 
+suspend inline fun <T> Preference<T>.initialize(): T {
+    return if(!isSet()) {
+        val default = defaultValue()
+        set(default)
+        default
+    } else {
+        get()
+    }
+}
+
 suspend inline fun <reified T, R : T> Preference<T>.getAndSet(crossinline block: (T) -> R) = set(
     block(get()),
 )

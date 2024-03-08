@@ -4,6 +4,7 @@ import android.os.Build
 import io.silv.oflchat.OflChatApp
 import io.silv.oflchat.preferences.DatastorePreferenceStore
 import io.silv.oflchat.preferences.dataStore
+import java.util.UUID
 
 object PreferenceHelper {
 
@@ -11,7 +12,10 @@ object PreferenceHelper {
         DatastorePreferenceStore(OflChatApp.instance.dataStore)
     }
 
-    val username = prefs.getString("username", "android_${Build.VERSION.BASE_OS}")
+
+    val username = prefs.getString("username", "android_${Build.VERSION.SDK_INT}")
+
+    val uuid = prefs.getString("uuid", "${UUID.randomUUID()}")
 
     val alwaysAdvertise = prefs.getBoolean("always_advertise", true)
 }

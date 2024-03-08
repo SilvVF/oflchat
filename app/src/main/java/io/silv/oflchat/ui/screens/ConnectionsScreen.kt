@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +26,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,11 +39,13 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import io.silv.oflchat.R
+import io.silv.oflchat.helpers.CStatus
 import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.CollectEventsWithLifecycle
 import io.silv.oflchat.ui.components.ConversationsTopBarDefaults
 import io.silv.oflchat.ui.components.FastScrollLazyColumn
 import io.silv.oflchat.viewmodels.DiscoverScreenModel
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 object ConnectionsScreen: Screen {
@@ -77,9 +81,8 @@ object ConnectionsScreen: Screen {
 
         DiscoverScreenContent(
             snackbarHostStateProvider = { snackbarHostState },
-            endpointProvider = { screenModel.endpoints },
-            requestsProvider = { screenModel.connections },
             navigateBack = { navigator.pop() },
+            endpoints = screenModel.endpoints
         )
     }
 }
@@ -87,98 +90,108 @@ object ConnectionsScreen: Screen {
 @Composable
 private fun DiscoverScreenContent(
     snackbarHostStateProvider: () -> SnackbarHostState,
-    endpointProvider: () -> List<String>,
-    requestsProvider: () -> List<String>,
     navigateBack: () -> Unit,
+    endpoints: List<Pair<String, ConnectionHelper.Endpoint>>
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostStateProvider()) },
         topBar = {
-            Surface(color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)) {
-                Column {
-                    TopAppBar(
-                        navigationIcon = {
-                            IconButton(onClick = navigateBack) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                    contentDescription = stringResource(id = R.string.back)
-                                )
-                            }
-                        },
-                        title = {
-                            ConversationsTopBarDefaults.TitleCollapsed(text = "New conversation")
-                        },
-                        actions = {
-                            IconButton(onClick = {}) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                    contentDescription = stringResource(id = R.string.back)
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            scrolledContainerColor = Color.Transparent
-                        )
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text(
-                            text = "To:",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        TextField(
-                            value = "",
-                            onValueChange = {},
-                            modifier = Modifier.weight(1f),
-                            textStyle = MaterialTheme.typography.bodySmall,
-                            colors = TextFieldDefaults.colors(
-                                disabledContainerColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                errorIndicatorColor = Color.Transparent
-                            )
-                        )
-                    }
-                }
-            }
+            ConnectionsSearchTopBar {}
         },
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        Text(ConnectionHelper.connections.toString())
+        val scope = rememberCoroutineScope()
         FastScrollLazyColumn(
             contentPadding = paddingValues
         ) {
-            stickyHeader {
-                Text("requests")
-            }
             items(
-                items = requestsProvider(),
-                key = { item -> "req$item" }
-            ) { req ->
+                items = endpoints,
+                key = { (id, _) -> id }
+            ) { (id, endpoint) ->
                 Card(
-                    onClick = {}
+                    onClick = {
+                        scope.launch {
+                            ConnectionHelper.initiateConnection(id)
+                        }
+                    },
                 ) {
-                    Text(text = req)
+                    Text(text = endpoint.id)
+                    Text(text = endpoint.contact.toString())
+                    Text(text = endpoint.found.toString())
+                    Text(endpoint.status.message)
+                    endpoint.conn?.let {
+                        if (!endpoint.connected) {
+                            Button(onClick = { ConnectionHelper.accpetConnection(endpoint.id) }) {
+                                val label = remember(endpoint.status) {
+                                    when(endpoint.status) {
+                                        is CStatus.Error, is CStatus.Rejected -> "Retry"
+                                        CStatus.None, is CStatus.Ok -> "Accept"
+                                    }
+                                }
+                                Text(label)
+                            }
+                        }
+                    }
                 }
             }
-            stickyHeader {
-                Text("endpoints")
-            }
-            items(
-                items = endpointProvider(),
-                key = { item -> "end$item" }
-            ) { endpoint ->
-                Card(
-                    onClick = { }
-                ) {
-                    Text(text = endpoint)
-                }
+        }
+    }
+}
+
+@Composable
+fun ConnectionsSearchTopBar(
+    onArrowBack: () -> Unit
+) {
+    Surface(color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)) {
+        Column {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onArrowBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(id = R.string.back)
+                        )
+                    }
+                },
+                title = {
+                    ConversationsTopBarDefaults.TitleCollapsed(text = "New conversation")
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(id = R.string.back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Text(
+                    text = "To:",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                TextField(
+                    value = "",
+                    onValueChange = {},
+                    modifier = Modifier.weight(1f),
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    colors = TextFieldDefaults.colors(
+                        disabledContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent
+                    )
+                )
             }
         }
     }

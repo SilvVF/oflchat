@@ -39,7 +39,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import io.silv.oflchat.R
 import io.silv.oflchat.core.model.Conversation
-import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.components.ConversationsTopBar
 import io.silv.oflchat.ui.components.ConversationsTopBarDefaults
 import io.silv.oflchat.ui.components.FastScrollLazyColumn
@@ -60,7 +59,6 @@ object ConversationsScreen: Screen {
         val conversations by screenModel.conversations.collectAsState()
 
         ConversationScreenContent(
-            requestQueueProvider = { emptyList() },
             conversationProvider = { conversations },
             snackBarHostStateProvider = { snackbarHostState },
             navigateToConnections = { navigator.push(ConnectionsScreen) }
@@ -70,7 +68,6 @@ object ConversationsScreen: Screen {
 
 @Composable
 private fun ConversationScreenContent(
-    requestQueueProvider: () -> List<ConnectionHelper.ConnectionRequest>,
     conversationProvider: () -> List<Conversation>,
     snackBarHostStateProvider: () -> SnackbarHostState,
     navigateToConnections: () -> Unit
@@ -169,7 +166,6 @@ fun ConversationScreenPreview() {
     OflchatTheme {
         val snackBarHostState = remember { SnackbarHostState() }
         ConversationScreenContent(
-            requestQueueProvider = { emptyList() },
             conversationProvider = { emptyList() },
             snackBarHostStateProvider = { snackBarHostState },
             navigateToConnections = {}
