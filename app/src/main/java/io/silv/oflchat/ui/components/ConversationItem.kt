@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -316,7 +315,7 @@ fun DateWithUnreadBadge(
     Column(
         modifier,
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.End
+        horizontalAlignment = Alignment.End,
     ) {
         val lastReceived = lastReceivedProvider()
         Text(
@@ -338,29 +337,24 @@ fun DateWithUnreadBadge(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onBackground,
-            ),
+            )
         )
-        Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
-            val unread = unreadCount()
-            if (unread >= 1) {
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .size(16.dp)
-                        .aspectRatio(1f)
-                ) {
-                    Text(
-                        text = remember(unread) { unread.toString() },
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.background,
-                            fontSize = 8.sp
-                        ),
-                    )
-                }
-            }
+        val unread = unreadCount()
+        val container = MaterialTheme.colorScheme.primary
+        if (unread >= 1) {
+            Text(
+                text = remember(unread) { unread.toString() },
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.background,
+                    fontSize = 8.sp
+                ),
+                modifier = Modifier
+                    .padding(4.dp)
+                    .drawBehind {
+                        drawCircle(container)
+                    }
+                    .padding(4.dp)
+            )
         }
     }
 }
@@ -462,7 +456,14 @@ fun LazyListScope.conversationTestData() {
         buildList {
             repeat(100) {
                 val participants =
-                    listOf("dafsdf", "dfasdf", "dfakdjfk", "dkjfaksjdf").take(Random.nextInt(1, 5))
+                    listOf(
+                        "dafsddff".take(Random.nextInt(4, 9)),
+                        "ddffasdf".take(Random.nextInt(4, 9)),
+                        "dfakdfddjfk".take(Random.nextInt(4, 9)),
+                        "dkjfadfksjdf".take(Random.nextInt(4, 9))
+                    )
+                        .take(Random.nextInt(1, 5))
+
                 val unread = listOf(0, 1).random()
                 val lastReceived = LocalDateTime.now()
                     .minusDays(Random.nextInt(0, 100).toLong())

@@ -1,15 +1,21 @@
 package io.silv.oflchat.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
@@ -28,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -73,19 +81,69 @@ private fun ConversationScreenContent(
     navigateToConnections: () -> Unit
 ) {
     val scrollBehavior = ConversationsTopBarDefaults.scrollBehavior()
+
+    val lazyListState = rememberLazyListState()
+    val scrolled by remember {
+        derivedStateOf { lazyListState.firstVisibleItemIndex >= 1 }
+    }
+    val scope = rememberCoroutineScope()
     
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostStateProvider()) },
-        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = navigateToConnections,
-                shape = CircleShape,
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Sms,
-                    contentDescription = stringResource(id = R.string.discover_tab_title)
-                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center) {
+                    AnimatedVisibility(
+                        scrolled,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier.wrapContentSize()
+                    ) {
+                        FilledIconButton(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .shadow(
+                                    elevation = 6.0.dp,
+                                    shape = CircleShape
+                                ),
+                            onClick = {
+                                scope.launch { lazyListState.animateScrollToItem(0) }
+                            },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                    alpha = 0.86f
+                                )
+                            ),
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowUpward,
+                                contentDescription = stringResource(id = R.string.scroll_to_top)
+                            )
+                        }
+                    }
+                }
+                FloatingActionButton(
+                    onClick = navigateToConnections,
+                    shape = CircleShape,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.comment_regular),
+                        contentDescription = stringResource(id = R.string.discover_tab_title),
+                        Modifier.size(24.dp).graphicsLayer { rotationY = 180f }
+                    )
+                }   
             }
         },
         topBar = {
@@ -121,41 +179,12 @@ private fun ConversationScreenContent(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            val lazyListState = rememberLazyListState()
-            val scrolled by remember {
-                derivedStateOf { lazyListState.firstVisibleItemIndex >= 1 }
-            }
-            val scope = rememberCoroutineScope()
-
-            FastScrollLazyColumn(
-                contentPadding = paddingValues,
-                modifier = Modifier.fillMaxSize(),
-                state = lazyListState
-            ) {
-                conversationTestData()
-            }
-            if (scrolled) {
-                FilledIconButton(
-                    modifier = Modifier
-                        .padding(22.dp)
-                        .size(50.dp)
-                        .align(Alignment.BottomCenter),
-                    onClick = {
-                        scope.launch { lazyListState.animateScrollToItem(0) }
-                    },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                      containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    ),
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowUpward,
-                        contentDescription = stringResource(id = R.string.scroll_to_top)
-                    )
-                }
-            }
+        FastScrollLazyColumn(
+            contentPadding = paddingValues,
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState
+        ) {
+            conversationTestData()
         }
     }
 }

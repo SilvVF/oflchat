@@ -53,18 +53,22 @@ object ConnectionHelper {
 
     private const val SERVICE_ID: String = "io.silv.oflchat"
 
-    private val advertisingOptions=
+    private val advertisingOptions by lazy {
         AdvertisingOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
-            .setLowPower(false)
+            .setLowPower(OflChatApp.isLowPower())
             .setConnectionType(ConnectionType.BALANCED)
             .build()
+    }
 
-    private val discoveryOptions=
+
+    private val discoveryOptions by lazy {
         DiscoveryOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
-            .setLowPower(false)
+            .setLowPower(OflChatApp.isLowPower())
             .build()
+    }
+
 
     var discovering by mutableStateOf(false)
         private set
@@ -103,7 +107,8 @@ object ConnectionHelper {
         )
     }
 
-    private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
+    private val connectionLifecycleCallback
+        get() = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
             scope.launch {
                 Timber.d("Initiated $id")
@@ -173,7 +178,8 @@ object ConnectionHelper {
     }
 
 
-    private val endpointDiscoveryCallback = object: EndpointDiscoveryCallback() {
+    private val endpointDiscoveryCallback
+        get() = object: EndpointDiscoveryCallback() {
         override fun onEndpointFound(id: String, info: DiscoveredEndpointInfo) {
             scope.launch {
                 Timber.d("Found $id")
@@ -249,6 +255,12 @@ object ConnectionHelper {
             launch(Dispatchers.IO) { startAdvertising() }
             launch(Dispatchers.IO) { startDiscovery() }
         }
+    }
+
+    fun terminate() {
+        client.stopAllEndpoints()
+        client.stopDiscovery()
+        client.stopAdvertising()
     }
 
     data class Endpoint(

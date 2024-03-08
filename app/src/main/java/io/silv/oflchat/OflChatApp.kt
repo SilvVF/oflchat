@@ -22,6 +22,11 @@ class OflChatApp : Application() {
         ConnectionHelper.initialize(this)
     }
 
+    override fun onTerminate() {
+        super.onTerminate()
+        ConnectionHelper.terminate()
+    }
+
     companion object {
         lateinit var instance: OflChatApp
 
@@ -37,7 +42,6 @@ class OflChatApp : Application() {
                 add(Manifest.permission.BLUETOOTH)
                 add(Manifest.permission.BLUETOOTH_ADMIN)
                 add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                add(Manifest.permission.ACCESS_FINE_LOCATION)
                 add(Manifest.permission.ACCESS_FINE_LOCATION)
                 if (Build.VERSION.SDK_INT >= 31) {
                     add(Manifest.permission.BLUETOOTH_ADVERTISE)

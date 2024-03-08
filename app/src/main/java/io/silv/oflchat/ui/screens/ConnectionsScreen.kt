@@ -96,7 +96,9 @@ private fun DiscoverScreenContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostStateProvider()) },
         topBar = {
-            ConnectionsSearchTopBar {}
+            ConnectionsSearchTopBar {
+                navigateBack()
+            }
         },
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
@@ -155,14 +157,6 @@ fun ConnectionsSearchTopBar(
                 },
                 title = {
                     ConversationsTopBarDefaults.TitleCollapsed(text = "New conversation")
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(id = R.string.back)
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
