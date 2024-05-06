@@ -1,0 +1,45 @@
+import io.silv.oflchat.core.model.MessageEntity.ContentType;
+import io.silv.oflchat.core.model.MessageEntity;
+import kotlin.Int;
+import kotlinx.datetime.Instant;
+
+CREATE TABLE Message (
+   id TEXT NOT NULL,
+   conversation_id TEXT NOT NULL,
+   content_type TEXT AS ContentType NOT NULL,
+   creation_date INTEGER AS Instant NOT NULL,
+   sender_user_id TEXT NOT NULL,
+   status TEXT AS MessageEntity.Status NOT NULL,
+   FOREIGN KEY (id) REFERENCES Conversation(id) ON DELETE CASCADE,
+   FOREIGN KEY (sender_user_id) REFERENCES User(id),
+   PRIMARY KEY (id, conversation_id)
+);
+
+CREATE INDEX message_sender_user_index ON Message(sender_user_id);
+CREATE INDEX message_status_index ON Message(status);
+
+CREATE TABLE MessageTextContent (
+      message_id TEXT NOT NULL,
+      conversation_id TEXT  NOT NULL,
+      text_body TEXT,
+      FOREIGN KEY (message_id, conversation_id) REFERENCES Message(id, conversation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+      PRIMARY KEY (message_id, conversation_id)
+);
+
+CREATE TABLE MessageAssetContent (
+      message_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+
+      asset_size INTEGER NOT NULL,
+      asset_name TEXT,
+      asset_mime_type TEXT NOT NULL,
+
+      -- metadata fields
+      asset_width INTEGER AS Int,
+      asset_height INTEGER AS Int,
+      asset_duration_ms INTEGER,
+      asset_normalized_loudness BLOB,
+
+      FOREIGN KEY (message_id, conversation_id) REFERENCES Message(id, conversation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+      PRIMARY KEY (message_id, conversation_id)
+);

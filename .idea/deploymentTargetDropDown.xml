@@ -10,18 +10,18 @@
       </entry>
       <entry key="app">
         <State>
-          <targetSelectedWithDropDown>
+          <runningDeviceTargetSelectedWithDropDown>
             <Target>
-              <type value="QUICK_BOOT_TARGET" />
+              <type value="RUNNING_DEVICE_TARGET" />
               <deviceKey>
                 <Key>
                   <type value="VIRTUAL_DEVICE_PATH" />
-                  <value value="C:\Users\iphon\.android\avd\Resizable_Experimental_API_33.avd" />
+                  <value value="C:\Users\iphon\.android\avd\Pixel_8_API_34_2.avd" />
                 </Key>
               </deviceKey>
             </Target>
-          </targetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2024-03-08T02:19:27.960963500Z" />
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-05-04T20:49:40.849672600Z" />
         </State>
       </entry>
     </value>

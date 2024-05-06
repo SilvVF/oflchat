@@ -43,6 +43,9 @@ class OflChatApp : Application() {
                 add(Manifest.permission.BLUETOOTH_ADMIN)
                 add(Manifest.permission.ACCESS_COARSE_LOCATION)
                 add(Manifest.permission.ACCESS_FINE_LOCATION)
+
+                add(Manifest.permission.RECORD_AUDIO)
+
                 if (Build.VERSION.SDK_INT >= 31) {
                     add(Manifest.permission.BLUETOOTH_ADVERTISE)
                     add(Manifest.permission.BLUETOOTH_CONNECT)

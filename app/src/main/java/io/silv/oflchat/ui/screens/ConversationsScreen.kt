@@ -46,7 +46,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import io.silv.oflchat.R
-import io.silv.oflchat.core.model.Conversation
+import io.silv.oflchat.core.model.ConversationEntity
 import io.silv.oflchat.ui.components.ConversationsTopBar
 import io.silv.oflchat.ui.components.ConversationsTopBarDefaults
 import io.silv.oflchat.ui.components.FastScrollLazyColumn
@@ -55,7 +55,7 @@ import io.silv.oflchat.ui.theme.OflchatTheme
 import io.silv.oflchat.viewmodels.ConversationScreenModel
 import kotlinx.coroutines.launch
 
-object ConversationsScreen: Screen {
+data object ConversationsScreen: Screen {
 
     @Composable
     override fun Content() {
@@ -76,7 +76,7 @@ object ConversationsScreen: Screen {
 
 @Composable
 private fun ConversationScreenContent(
-    conversationProvider: () -> List<Conversation>,
+    conversationProvider: () -> List<ConversationEntity>,
     snackBarHostStateProvider: () -> SnackbarHostState,
     navigateToConnections: () -> Unit
 ) {
@@ -191,7 +191,7 @@ private fun ConversationScreenContent(
 
 @Preview
 @Composable
-fun ConversationScreenPreview() {
+private fun ConversationScreenPreview() {
     OflchatTheme {
         val snackBarHostState = remember { SnackbarHostState() }
         ConversationScreenContent(

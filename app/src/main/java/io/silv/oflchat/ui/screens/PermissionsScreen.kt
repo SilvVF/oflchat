@@ -30,6 +30,7 @@ class PermissionsScreen : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+
         val permissionState = rememberMultiplePermissionsState(
             permissions = OflChatApp.defaultPermissions
         )

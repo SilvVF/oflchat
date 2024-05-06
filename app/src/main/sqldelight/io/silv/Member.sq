@@ -1,0 +1,25 @@
+import io.silv.oflchat.core.model.MemberEntity.Role;
+
+CREATE TABLE Member (
+    user TEXT NOT NULL,
+    conversation TEXT NOT NULL,
+    role TEXT AS Role NOT NULL,
+    CONSTRAINT member_conv PRIMARY KEY (user, conversation) ON CONFLICT IGNORE,
+    FOREIGN KEY (conversation) REFERENCES Conversation(id)  ON DELETE CASCADE,
+    FOREIGN KEY (user) REFERENCES User(id) ON DELETE CASCADE
+);
+
+CREATE INDEX member_conversation_index ON Member(conversation);
+
+insertMember:
+INSERT OR IGNORE INTO Member(user, conversation, role)
+VALUES (?, ?, ?);
+
+insertOrUpdateMember:
+INSERT INTO Member(user, conversation, role)
+VALUES (?, ?, ?);
+
+updateRole:
+UPDATE Member
+SET role = ?
+WHERE user = ?;

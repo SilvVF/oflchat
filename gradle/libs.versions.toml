@@ -1,0 +1,89 @@
+[versions]
+composeBom = "2024.02.01"
+coreKtx = "1.13.1"
+
+kotlin = "1.9.23"
+kotlinxCoroutines = "1.8.0"
+kotlinxDatetime = "0.6.0-RC.2"
+kotlinxSerializationJson = "1.6.3"
+ksp = "1.9.23-1.0.20"
+
+androidGradlePlugin = "8.4.0"
+androidTools = "31.4.0"
+
+androidDesugarJdkLibs = "2.0.4"
+
+androidxLifecycle = "2.7.0"
+androidxComposeBom = "2024.05.00"
+androidxComposeCompiler = "1.5.13"
+androidxComposeUiTest = "1.7.0-alpha08"
+androidxComposeRuntimeTracing = "1.0.0-beta01"
+androidxCore = "1.13.1"
+androidxActivity = "1.9.0"
+
+lifecycleRuntimeKtx = "2.7.0"
+materialIconsExtendedAndroid = "1.6.7"
+playServicesNearby = "19.2.0"
+voyager = "1.1.0-alpha04"
+sqldelight = "2.0.2"
+coil = "2.6.0"
+okio = "3.9.0"
+timber = "5.0.1"
+datastorePreferences = "1.1.1"
+
+
+
+[libraries]
+# Dependencies of the included build-logic
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+android-tools-common = { group = "com.android.tools", name = "common", version.ref = "androidTools" }
+
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-ui = { module = "androidx.compose.ui:ui" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+play-services-nearby = { module = "com.google.android.gms:play-services-nearby", version.ref = "playServicesNearby" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+work-testing = { group = "androidx.work", name = "work-testing", version = "2.9.0" }
+
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+
+android-desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
+
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+androidx-compose-material-iconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+androidx-compose-runtime-tracing = { group = "androidx.compose.runtime", name = "runtime-tracing", version.ref = "androidxComposeRuntimeTracing" }
+androidx-compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "androidxComposeUiTest" }
+androidx-compose-ui-testManifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-ui-util = { group = "androidx.compose.ui", name = "ui-util" }
+androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
+
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+voyager-screenModel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
+voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
+
+sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-extensions-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
+
+coil = { module = "io.coil-kt:coil", version.ref = "coil" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+
+[plugins]
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+oflchat-android-application = { id = "oflchat.android.application", version = "unspecified" }
+oflchat-android-application-compose = { id = "oflchat.android.application.compose", version = "unspecified" }

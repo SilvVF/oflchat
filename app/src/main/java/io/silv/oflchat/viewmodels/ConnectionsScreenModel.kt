@@ -7,16 +7,28 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.EventProducer
-import timber.log.Timber
+import kotlinx.coroutines.launch
 
 
-class DiscoverScreenModel : ScreenModel, EventProducer<DiscoverScreenModel.DiscoverEvent> by EventProducer.default() {
+class ConnectionsScreenModel :
+    ScreenModel,
+    EventProducer<ConnectionsScreenModel.DiscoverEvent> by EventProducer.default() {
 
-    val endpoints by derivedStateOf {
-        Timber.d( ConnectionHelper.endpoints.entries.map { Pair(it.key, it.value) }.toString())
-        ConnectionHelper.endpoints.entries.map { Pair(it.key, it.value) }
+    val endpointsGroupedFirstChar by derivedStateOf {
+        ConnectionHelper.endpoints.entries
+            .map { Pair(it.key, it.value) }
+            .groupBy { (_, endpoint) -> endpoint.contact.name.first().toString() }
+            .mapValues { (_,  endpoints) -> endpoints.sortedBy { it.second.contact.name } }
+            .toList()
+    }
+
+    fun connect(id: String) {
+        screenModelScope.launch {
+            ConnectionHelper.initiateConnection(id)
+        }
     }
 
     sealed interface DiscoverEvent {

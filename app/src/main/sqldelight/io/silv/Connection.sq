@@ -1,0 +1,23 @@
+import io.silv.oflchat.core.model.ConnectionEntity;
+import kotlin.Boolean;
+import kotlinx.datetime.Instant;
+
+CREATE TABLE Connection (
+    endpoint_id TEXT PRIMARY KEY NOT NULL,
+    user_id TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    last_update_date INTEGER AS Instant NOT NULL,
+    status TEXT AS ConnectionEntity.State NOT NULL DEFAULT 'NOT_CONNECTED',
+    should_notify INTEGER AS Boolean DEFAULT 1
+);
+
+
+insert:
+INSERT OR IGNORE INTO Connection(endpoint_id, user_id, user_name, last_update_date, status, should_notify)
+VALUES (?, ?, ?, ?, ?, ?);
+
+selectByEndpointId:
+SELECT * FROM Connection WHERE endpoint_id = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

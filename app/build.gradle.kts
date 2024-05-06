@@ -1,7 +1,7 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("app.cash.sqldelight") version "2.0.1"
+    alias(libs.plugins.oflchat.android.application)
+    alias(libs.plugins.oflchat.android.application.compose)
+    alias(libs.plugins.sqldelight)
 }
 
 sqldelight {
@@ -14,12 +14,9 @@ sqldelight {
 
 android {
     namespace = "io.silv.oflchat"
-    compileSdk = 34
 
     defaultConfig {
         applicationId = "io.silv.oflchat"
-        minSdk = 24
-        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -28,7 +25,9 @@ android {
             useSupportLibrary = true
         }
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -38,21 +37,6 @@ android {
             )
         }
     }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -60,72 +44,63 @@ android {
     }
 }
 
-dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2024.02.01"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+dependencies {
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.ktx)
+
+    api(libs.androidx.compose.foundation)
+    api(libs.androidx.compose.foundation.layout)
+    api(libs.androidx.compose.material.iconsExtended)
+    api(libs.androidx.compose.material3)
+    api(libs.androidx.compose.runtime)
+    api(libs.androidx.compose.ui.util)
+
+    implementation(libs.androidx.material.icons.extended.android)
+
+    testImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.androidx.compose.ui.test)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.compose.ui.testManifest)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.tooling.preview)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.2")
+    implementation(libs.kotlinx.datetime)
 
     // Google Services
-    implementation("com.google.android.gms:play-services-nearby:19.1.0")
+    implementation(libs.play.services.nearby)
 
-    // Voyager
-    val voyagerVersion = "1.0.0"
-    implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
-    implementation("cafe.adriel.voyager:voyager-screenmodel:$voyagerVersion")
-    implementation("cafe.adriel.voyager:voyager-bottom-sheet-navigator:$voyagerVersion")
-    implementation("cafe.adriel.voyager:voyager-tab-navigator:$voyagerVersion")
-    implementation("cafe.adriel.voyager:voyager-transitions:$voyagerVersion")
+    implementation(libs.voyager.navigator)
+    implementation(libs.voyager.screenModel)
+    implementation(libs.voyager.transitions)
+    implementation(libs.voyager.tabNavigator)
 
     // Datastore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.androidx.datastore.preferences)
 
     // Timber - Logging
-    implementation("com.jakewharton.timber:timber:5.0.1")
+    implementation(libs.timber)
 
     // SqlDelight
-    implementation("app.cash.sqldelight:android-driver:2.0.1")
-    implementation("app.cash.sqldelight:coroutines-extensions:2.0.1")
+    implementation(libs.sqldelight.android.driver)
+    implementation(libs.sqldelight.extensions.coroutines)
 
     // Coil
-    implementation("io.coil-kt:coil:2.6.0")
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+
+    implementation(libs.okio)
 }
+
 tasks {
-    // See https://kotlinlang.org/docs/reference/experimental.html#experimental-status-of-experimental-api(-markers)
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.freeCompilerArgs += listOf(
-            "-Xcontext-receivers",
-            "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
-            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-            "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
-            "-opt-in=androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi",
             "-opt-in=coil.annotation.ExperimentalCoilApi",
-            "-opt-in=kotlinx.coroutines.FlowPreview",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:stabilityConfigurationPath=" +
-            "${project.path}/compose_compiler_config.conf"
         )
     }
 }

@@ -7,12 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.screens.ConversationsScreen
 import io.silv.oflchat.ui.screens.PermissionsScreen
 import io.silv.oflchat.ui.theme.OflchatTheme
@@ -26,17 +29,28 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OflchatTheme {
-                // A surface container using the 'background' color from the theme
-                Navigator(
-                    listOf(
-                        ConversationsScreen,
-                        PermissionsScreen()
-                    )
-                ) { navigator ->
-                    CrossfadeTransition(navigator)
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    Navigator(
+                        listOf(
+                            ConversationsScreen,
+                            PermissionsScreen()
+                        )
+                    ) { navigator ->
+                        CrossfadeTransition(navigator)
+                    }
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        ConnectionHelper.startDiscovery()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        ConnectionHelper.stopDiscovery()
     }
 }
 

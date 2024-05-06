@@ -19,7 +19,8 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    background = Color.Black
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -48,7 +49,10 @@ fun OflchatTheme(
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme)
+                dynamicDarkColorScheme(context)
+            else
+                dynamicLightColorScheme(context)
         }
 
         darkTheme -> DarkColorScheme
