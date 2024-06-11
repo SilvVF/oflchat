@@ -18,11 +18,7 @@ class ConnectionsScreenModel :
     EventProducer<ConnectionsScreenModel.DiscoverEvent> by EventProducer.default() {
 
     val endpointsGroupedFirstChar by derivedStateOf {
-        ConnectionHelper.endpoints.entries
-            .map { Pair(it.key, it.value) }
-            .groupBy { (_, endpoint) -> endpoint.contact.name.first().toString() }
-            .mapValues { (_,  endpoints) -> endpoints.sortedBy { it.second.contact.name } }
-            .toList()
+        emptyList<Pair<String, List<Pair<String, String>>>>()
     }
 
     fun connect(id: String) {

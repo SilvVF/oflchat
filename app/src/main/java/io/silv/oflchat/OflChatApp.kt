@@ -30,12 +30,20 @@ class OflChatApp : Application() {
     companion object {
         lateinit var instance: OflChatApp
 
+        val permissions: List<String> by lazy { mediaPermissions + connectionPermissions }
+
         fun isLowPower(): Boolean {
             val powerManager = instance.getSystemService<PowerManager>()
             return powerManager?.isPowerSaveMode == true
         }
 
-        val defaultPermissions by lazy {
+        val mediaPermissions by lazy {
+            listOf(
+                Manifest.permission.RECORD_AUDIO
+            )
+        }
+
+        val connectionPermissions by lazy {
             buildList {
                 add(Manifest.permission.ACCESS_WIFI_STATE)
                 add(Manifest.permission.CHANGE_WIFI_STATE)
@@ -43,8 +51,6 @@ class OflChatApp : Application() {
                 add(Manifest.permission.BLUETOOTH_ADMIN)
                 add(Manifest.permission.ACCESS_COARSE_LOCATION)
                 add(Manifest.permission.ACCESS_FINE_LOCATION)
-
-                add(Manifest.permission.RECORD_AUDIO)
 
                 if (Build.VERSION.SDK_INT >= 31) {
                     add(Manifest.permission.BLUETOOTH_ADVERTISE)

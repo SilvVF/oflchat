@@ -4,12 +4,13 @@ import androidx.compose.runtime.mutableStateListOf
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.silv.oflchat.core.cache.AudioCache
+import io.silv.oflchat.core.model.ConversationEntity
 import io.silv.oflchat.core.model.transmit.Stream
-import io.silv.oflchat.helpers.DatabaseHelper
 import io.silv.oflchat.helpers.MediaHelper
 import io.silv.oflchat.helpers.PayloadHelper
 import io.silv.oflchat.ui.EventProducer
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -42,7 +43,7 @@ class ConversationViewScreenModel(
             .launchIn(screenModelScope)
     }
 
-    val conversation = DatabaseHelper.observeConversationById(conversationId)
+    val conversation = flowOf(emptyList<ConversationEntity>())
         .stateIn(
             screenModelScope,
             SharingStarted.WhileSubscribed(5_000),

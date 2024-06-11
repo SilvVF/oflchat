@@ -1,0 +1,15 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+option java_package = "io.silv.oflchat";
+option java_multiple_files = true;
+
+message Settings {
+  int32 example_counter = 1;
+}
+
+message Message {
+  string id = 1;
+  string content = 2;
+  google.protobuf.Timestamp sent_at = 3;
+}

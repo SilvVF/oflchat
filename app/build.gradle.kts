@@ -1,7 +1,10 @@
+import com.google.protobuf.gradle.id
+
 plugins {
     alias(libs.plugins.oflchat.android.application)
     alias(libs.plugins.oflchat.android.application.compose)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.protobuf)
 }
 
 sqldelight {
@@ -95,6 +98,25 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.okio)
+
+    // protobuf
+    implementation(libs.protobuf.javalite)
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.19.4"
+    }
+
+    generateProtoTasks {
+        all().configureEach {
+            builtins {
+                id("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }
 
 tasks {

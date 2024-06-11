@@ -44,7 +44,7 @@ object DatabaseHelper {
         private const val MEMBER = "wire_member"
     }
 
-    private val InstantAdapter = object : ColumnAdapter<Instant, Long> {
+    internal val InstantAdapter = object : ColumnAdapter<Instant, Long> {
         override fun decode(databaseValue: Long): Instant = Instant.fromEpochMilliseconds(databaseValue)
 
         override fun encode(value: Instant): Long = value.toEpochMilliseconds()

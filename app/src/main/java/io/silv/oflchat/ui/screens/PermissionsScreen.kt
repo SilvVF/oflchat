@@ -32,7 +32,7 @@ class PermissionsScreen : Screen {
         val context = LocalContext.current
 
         val permissionState = rememberMultiplePermissionsState(
-            permissions = OflChatApp.defaultPermissions
+            permissions = OflChatApp.permissions
         )
 
         LaunchedEffect(Unit) {

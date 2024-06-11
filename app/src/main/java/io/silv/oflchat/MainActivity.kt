@@ -23,6 +23,10 @@ import io.silv.oflchat.ui.theme.OflchatTheme
 
 class MainActivity : ComponentActivity() {
 
+    init {
+        lifecycle.addObserver(ConnectionHelper)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -43,14 +47,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        ConnectionHelper.startDiscovery()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        ConnectionHelper.stopDiscovery()
+    override fun onDestroy() {
+        super.onDestroy()
+        lifecycle.removeObserver(ConnectionHelper)
     }
 }
 

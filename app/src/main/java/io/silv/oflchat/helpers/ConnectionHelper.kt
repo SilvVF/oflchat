@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionType
@@ -22,7 +24,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-object ConnectionHelper {
+object ConnectionHelper: DefaultLifecycleObserver {
 
     private lateinit var client: ConnectionsClient
 
@@ -54,7 +56,7 @@ object ConnectionHelper {
     var advertising by mutableStateOf(false)
         private set
 
-    private val permissionState by lazy { PermissionState(applicationContext, OflChatApp.defaultPermissions) }
+    private val permissionState by lazy { PermissionState(applicationContext, OflChatApp.connectionPermissions) }
 
     fun accpetConnection(endpointId: String) {
         if (!permissionState.checkAllGranted()) { return }
@@ -69,7 +71,11 @@ object ConnectionHelper {
         client.requestConnection(
             PreferenceHelper.getUserString(),
             endpointId,
-            connectionLifecycleCallback
+            ConnectionLifeCycleHandler(
+                DatabaseHelper.connectionDao(),
+                scope,
+                userInitiated = true
+            )
         )
     }
 
@@ -113,12 +119,25 @@ object ConnectionHelper {
         Timber.d("Initializing ConnectionHelper")
         client = Nearby.getConnectionsClient(context)
 
-        if (!permissionState.checkAllGranted()) { return }
-
         scope.launch {
             launch { startAdvertising() }
             launch { startDiscovery() }
         }
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
+
+        scope.launch {
+            startAdvertising()
+            startDiscovery()
+        }
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
+        client.stopDiscovery()
+        client.stopAdvertising()
     }
 
     fun terminate() {

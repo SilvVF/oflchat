@@ -43,6 +43,27 @@ data class ConversationEntity(
     enum class ReceiptMode { DISABLED, ENABLED }
 }
 
+
+data class ConnectionUpdate(
+    val endpointId: String,
+    val userId: String? = null,
+    val username: String? = null,
+    val lastUpdateDate: Instant? = null,
+    val status: ConnectionEntity.State? = null,
+    val shouldNotify: Boolean? = null
+)
+
+fun ConnectionEntity.toUpdate(): ConnectionUpdate {
+    return ConnectionUpdate(
+        endpointId = endpointId,
+        userId = userId,
+        username = username,
+        lastUpdateDate = lastUpdateDate,
+        status = status,
+        shouldNotify = shouldNotify
+    )
+}
+
 data class ConnectionEntity(
     val endpointId: String,
     val userId: String,

@@ -16,6 +16,15 @@ insert:
 INSERT OR IGNORE INTO Connection(endpoint_id, user_id, user_name, last_update_date, status, should_notify)
 VALUES (?, ?, ?, ?, ?, ?);
 
+update:
+UPDATE Connection SET
+    user_id = COALESCE(:userId, user_id),
+    user_name = COALESCE(:username, user_name),
+    last_update_date = COALESCE(:lastUpdateDate, last_update_date),
+    status = COALESCE(:status, status),
+    should_notify = COALESCE(:shouldNotify, should_notify)
+WHERE endpoint_id = :id;
+
 selectByEndpointId:
 SELECT * FROM Connection WHERE endpoint_id = ?;
 

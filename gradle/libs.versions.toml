@@ -30,6 +30,8 @@ coil = "2.6.0"
 okio = "3.9.0"
 timber = "5.0.1"
 datastorePreferences = "1.1.1"
+protobuf = "0.9.4"
+javalite = "3.18.0"
 
 
 
@@ -73,6 +75,8 @@ voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", v
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-extensions-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "javalite" }
+
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
@@ -85,5 +89,7 @@ android-library = { id = "com.android.library", version.ref = "androidGradlePlug
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
+
 oflchat-android-application = { id = "oflchat.android.application", version = "unspecified" }
 oflchat-android-application-compose = { id = "oflchat.android.application.compose", version = "unspecified" }
