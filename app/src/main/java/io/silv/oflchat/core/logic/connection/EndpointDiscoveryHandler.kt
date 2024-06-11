@@ -17,7 +17,7 @@ class EndpointDiscoveryHandler(
 ) : EndpointDiscoveryCallback() {
     override fun onEndpointFound(eid: String, info: DiscoveredEndpointInfo) {
         scope.launch {
-            val existing = connectionDao.selectByEndpointId(eid)
+            val existing = connectionDao.selectByUserId(info.uuid)
             if (existing != null) {
                 updateExistingConnection(existing, info)
             } else {

@@ -3,17 +3,20 @@ import kotlin.Boolean;
 import kotlinx.datetime.Instant;
 
 CREATE TABLE Connection (
-    endpoint_id TEXT PRIMARY KEY NOT NULL,
+    endpoint_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     user_name TEXT NOT NULL,
     last_update_date INTEGER AS Instant NOT NULL,
     status TEXT AS ConnectionEntity.State NOT NULL DEFAULT 'NOT_CONNECTED',
-    should_notify INTEGER AS Boolean DEFAULT 1
+    should_notify INTEGER AS Boolean DEFAULT 1,
+    PRIMARY KEY (endpoint_id, user_id)
 );
 
+clear:
+DELETE FROM Connection;
 
 insert:
-INSERT OR IGNORE INTO Connection(endpoint_id, user_id, user_name, last_update_date, status, should_notify)
+INSERT OR REPLACE INTO Connection(endpoint_id, user_id, user_name, last_update_date, status, should_notify)
 VALUES (?, ?, ?, ?, ?, ?);
 
 update:
@@ -28,5 +31,11 @@ WHERE endpoint_id = :id;
 selectByEndpointId:
 SELECT * FROM Connection WHERE endpoint_id = ?;
 
+selectByUserId:
+SELECT * FROM Connection WHERE user_id = ?;
+
 lastInsertRowId:
 SELECT last_insert_rowid();
+
+selectAll:
+SELECT * FROM Connection;

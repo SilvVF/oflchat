@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +59,15 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import io.silv.oflchat.R
+import io.silv.oflchat.core.model.ConnectionEntity
+import io.silv.oflchat.core.model.ConnectionEntity.State.ACCEPTED
+import io.silv.oflchat.core.model.ConnectionEntity.State.BLOCKED
+import io.silv.oflchat.core.model.ConnectionEntity.State.IGNORED
+import io.silv.oflchat.core.model.ConnectionEntity.State.LOST
+import io.silv.oflchat.core.model.ConnectionEntity.State.NOT_CONNECTED
+import io.silv.oflchat.core.model.ConnectionEntity.State.PENDING
+import io.silv.oflchat.core.model.ConnectionEntity.State.SENT
+import io.silv.oflchat.helpers.ConnectionHelper
 import io.silv.oflchat.ui.CollectEventsWithLifecycle
 import io.silv.oflchat.ui.components.ConversationItemDefaults
 import io.silv.oflchat.ui.components.ConversationsTopBarDefaults
@@ -72,6 +83,7 @@ object ConnectionsScreen: Screen {
         val context = LocalContext.current
         val screenModel = rememberScreenModel { ConnectionsScreenModel() }
         val navigator = LocalNavigator.currentOrThrow
+        val endpoints by screenModel.connectionsGroupedByFirstChar.collectAsState()
 
         CollectEventsWithLifecycle(screenModel) { event ->
             when(event) {
@@ -100,7 +112,7 @@ object ConnectionsScreen: Screen {
                     ConversationViewScreen(-1L, it)
                 )
             },
-            endpoints = screenModel.endpointsGroupedFirstChar
+            endpoints = endpoints
         )
     }
 }
@@ -111,7 +123,7 @@ private fun ConnectionsScreenContent(
     navigateBack: () -> Unit,
     initiateConnection: (id: String) -> Unit,
     navigateToConversation: (endpoint: String) -> Unit,
-    endpoints: List<Pair<String, List<Pair<String, String>>>>
+    endpoints: List<Pair<String, List<ConnectionEntity>>>,
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostStateProvider()) },
@@ -150,19 +162,14 @@ private fun ConnectionsScreenContent(
                 }
                 items(
                     items = endpoints,
-                    key = { (id, _) -> id }
-                ) { (id, endpoint) ->
+                ) {endpoint ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                         modifier = Modifier
                             .clip(CircleShape)
                             .clickable {
-                                if (endpoint.isEmpty()) {
-                                    navigateToConversation(endpoint)
-                                } else {
-                                    initiateConnection(id)
-                                }
+                                initiateConnection(endpoint.endpointId)
                             }
                             .padding(8.dp)
                             .height(48.dp)
@@ -182,7 +189,7 @@ private fun ConnectionsScreenContent(
                         ) {
                             ConversationItemDefaults.ProfileIcon(
                                 modifier = Modifier.size(48.dp),
-                                text = endpoint,
+                                text = endpoint.username,
                                 textStyle = MaterialTheme.typography.headlineLarge.copy(
                                     color = MaterialTheme.colorScheme.onBackground
                                 ),
@@ -190,18 +197,32 @@ private fun ConnectionsScreenContent(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
                             verticalArrangement = Arrangement.SpaceBetween,
                             horizontalAlignment = Alignment.Start
                         ) {
                             Text(
-                                text = endpoint,
+                                text = endpoint.username,
                                 maxLines = 1,
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Text(
-                                text = endpoint,
+                                text = endpoint.userId,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onBackground.copy(
+                                        alpha = 0.78f
+                                    )
+                                ),
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                text = endpoint.endpointId,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -213,19 +234,29 @@ private fun ConnectionsScreenContent(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-//                        endpoint.conn?.let {
-//                            if (!endpoint.connected) {
-//                                ElevatedButton(onClick = { ConnectionHelper.accpetConnection(endpoint.id) }) {
-//                                    val label = remember(endpoint.status) {
-//                                        when (endpoint.status) {
-//                                            is ConnectionHelper.CStatus.Error, is ConnectionHelper.CStatus.Rejected -> "Retry"
-//                                            ConnectionHelper.CStatus.None, is ConnectionHelper.CStatus.Ok -> "Accept"
-//                                        }
-//                                    }
-//                                    Text(label)
-//                                }
-//                            }
-//                        }
+                        when(endpoint.status) {
+                            NOT_CONNECTED -> { Text("NOT_CONNECTED") }
+                            LOST -> { Text("LOST") }
+                            PENDING -> {
+                                ElevatedButton(
+                                    onClick = { ConnectionHelper.accpetConnection(endpoint.endpointId) },
+                                    enabled = false
+                                ) {
+                                    Text("Accept")
+                                }
+                            }
+                            SENT -> {
+                                ElevatedButton(
+                                    onClick = {},
+                                    enabled = false
+                                ) {
+                                    Text("Sent")
+                                }
+                            }
+                            BLOCKED -> { Text("BLOCKED") }
+                            IGNORED -> { Text("IGNORED") }
+                            ACCEPTED ->{ Text("ACCEPTED") }
+                        }
                     }
                 }
             }

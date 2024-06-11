@@ -5,6 +5,7 @@ import io.silv.oflchat.core.DatabaseHandler
 import io.silv.oflchat.core.model.ConnectionEntity
 import io.silv.oflchat.core.model.ConnectionUpdate
 import io.silv.oflchat.helpers.DatabaseHelper
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 
 class ConnectionDao(
@@ -22,7 +23,7 @@ class ConnectionDao(
         ConnectionEntity(
             endpoint_id,
             user_id,
-            user_id,
+            user_name,
             last_update_date,
             status,
             should_notify ?: true
@@ -42,10 +43,22 @@ class ConnectionDao(
         }
     }
 
+    suspend fun clear() = handler.await { connectionQueries.clear() }
+
+    suspend fun selectByUserId(uid: String): ConnectionEntity? {
+        return handler.awaitOneOrNull {
+            connectionQueries.selectByUserId(uid, mapEntity)
+        }
+    }
+
     suspend fun selectByEndpointId(eid: String): ConnectionEntity? {
         return handler.awaitOneOrNull {
             connectionQueries.selectByEndpointId(eid, mapEntity)
         }
+    }
+
+    fun observeAll(): Flow<List<ConnectionEntity>> {
+        return handler.subscribeToList { connectionQueries.selectAll(mapEntity) }
     }
 
     suspend fun update(connectionUpdate: ConnectionUpdate) {

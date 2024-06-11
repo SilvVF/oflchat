@@ -4,16 +4,18 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import io.silv.oflchat.Message
 import io.silv.oflchat.core.cache.AudioCache
-import io.silv.oflchat.core.model.transmit.Packet
-import io.silv.oflchat.core.model.transmit.Packet.PacketType
+import io.silv.oflchat.core.model.transmit.ProtoType
+import io.silv.oflchat.core.model.transmit.ProtoType.*
 import io.silv.oflchat.core.model.transmit.Stream
 import io.silv.oflchat.core.model.transmit.Stream.StreamType.AUDIO
-import io.silv.oflchat.core.model.transmit.decodeType
+import io.silv.oflchat.core.model.transmit.wrap
 import okio.buffer
 import okio.source
 import timber.log.Timber
 import java.io.InputStream
+import java.util.UUID
 
 object PayloadHelper {
 
@@ -24,15 +26,18 @@ object PayloadHelper {
         override fun onPayloadReceived(id: String, payload: Payload) {
             when (payload.type) {
                 Payload.Type.BYTES -> {
-                    val packet = Packet.decoder(payload.asBytes()!!)
 
-                    when (packet.type) {
-                        PacketType.String -> {
-                            val data = packet.type.decodable.decodeType<String>(packet.data)
+                    val (type, data) = ProtoType.unwrap(payload.asBytes()!!)
+
+                    when(type) {
+                        Message -> {
+                            val message = Message.newBuilder()
+                                .mergeFrom(data)
+                                .build()
+                            
+                            Timber.d("received message [\t$message\t]")
                         }
                     }
-
-                    Timber.d("received packet [\n\t$packet\n]")
                 }
                 Payload.Type.STREAM -> {
                     val stream = Stream.decode(payload.asStream()!!.asInputStream())
@@ -73,16 +78,17 @@ object PayloadHelper {
     }
 
     fun sendString(endpointId: String, data: String) {
-        val encoded = data.encodeToByteArray()
 
-        val bytes = Packet(
-            version = Packet.VERSION,
-            type = PacketType.String,
-            data = encoded
+        send(
+            endpointId,
+            ProtoType.Message.wrap(
+                Message.newBuilder()
+                    .setId(UUID.randomUUID().toString())
+                    .setContent(data)
+                    .build()
+                    .toByteArray()
+            )
         )
-            .encode()
-
-        send(endpointId, bytes)
     }
 
 

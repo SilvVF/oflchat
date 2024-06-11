@@ -21,7 +21,7 @@ class ConnectionLifeCycleHandler(
 
     override fun onConnectionInitiated(eid: String, info: ConnectionInfo) {
         scope.launch {
-            val existing = connectionDao.selectByEndpointId(eid)
+            val existing = connectionDao.selectByUserId(info.uuid)
 
             if (existing != null) {
                 updateExistingConnection(existing, info)
