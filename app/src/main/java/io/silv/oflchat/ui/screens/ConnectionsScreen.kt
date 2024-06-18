@@ -40,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,7 +133,6 @@ private fun ConnectionsScreenContent(
         },
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        val scope = rememberCoroutineScope()
         FastScrollLazyColumn(
             contentPadding = paddingValues
         ) {
@@ -240,15 +238,13 @@ private fun ConnectionsScreenContent(
                             PENDING -> {
                                 ElevatedButton(
                                     onClick = { ConnectionHelper.accpetConnection(endpoint.endpointId) },
-                                    enabled = false
                                 ) {
                                     Text("Accept")
                                 }
                             }
                             SENT -> {
                                 ElevatedButton(
-                                    onClick = {},
-                                    enabled = false
+                                    onClick = { ConnectionHelper.accpetConnection(endpoint.endpointId) },
                                 ) {
                                     Text("Sent")
                                 }

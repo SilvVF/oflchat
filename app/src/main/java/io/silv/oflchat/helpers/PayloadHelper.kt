@@ -11,11 +11,11 @@ import io.silv.oflchat.core.model.transmit.ProtoType.*
 import io.silv.oflchat.core.model.transmit.Stream
 import io.silv.oflchat.core.model.transmit.Stream.StreamType.AUDIO
 import io.silv.oflchat.core.model.transmit.wrap
+import kotlinx.coroutines.runBlocking
 import okio.buffer
 import okio.source
 import timber.log.Timber
 import java.io.InputStream
-import java.util.UUID
 
 object PayloadHelper {
 
@@ -78,12 +78,11 @@ object PayloadHelper {
     }
 
     fun sendString(endpointId: String, data: String) {
-
         send(
             endpointId,
             ProtoType.Message.wrap(
                 Message.newBuilder()
-                    .setId(UUID.randomUUID().toString())
+                    .setId(runBlocking { PreferenceHelper.uuid.get() })
                     .setContent(data)
                     .build()
                     .toByteArray()

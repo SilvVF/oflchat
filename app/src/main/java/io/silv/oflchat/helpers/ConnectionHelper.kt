@@ -8,7 +8,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
-import com.google.android.gms.nearby.connection.ConnectionType
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.Strategy
@@ -22,6 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
 object ConnectionHelper: DefaultLifecycleObserver {
@@ -38,7 +38,6 @@ object ConnectionHelper: DefaultLifecycleObserver {
         AdvertisingOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
             .setLowPower(OflChatApp.isLowPower())
-            .setConnectionType(ConnectionType.BALANCED)
             .build()
     }
 
@@ -50,11 +49,9 @@ object ConnectionHelper: DefaultLifecycleObserver {
             .build()
     }
 
-    var discovering by mutableStateOf(false)
-        private set
+    private var discovering by mutableStateOf(false)
 
-    var advertising by mutableStateOf(false)
-        private set
+    private var advertising by mutableStateOf(false)
 
     private val permissionState by lazy { PermissionState(applicationContext, OflChatApp.connectionPermissions) }
 
@@ -67,7 +64,9 @@ object ConnectionHelper: DefaultLifecycleObserver {
     }
 
     suspend fun initiateConnection(endpointId: String) {
+
         if (!permissionState.checkAllGranted()) { return }
+        Timber.d("Trying to connect")
         client.requestConnection(
             PreferenceHelper.getUserString(),
             endpointId,
@@ -77,28 +76,32 @@ object ConnectionHelper: DefaultLifecycleObserver {
                 userInitiated = true
             )
         )
+
+        accpetConnection(endpointId)
     }
 
-    private val connectionLifecycleCallback
-        get() = ConnectionLifeCycleHandler(DatabaseHelper.connectionDao(), scope)
+    private val connectionLifecycleCallback by lazy {
+        ConnectionLifeCycleHandler(DatabaseHelper.connectionDao(), scope)
+    }
 
 
-    private val endpointDiscoveryCallback
-        get() = EndpointDiscoveryHandler(DatabaseHelper.connectionDao(), scope)
+    private val endpointDiscoveryCallback by lazy {
+        EndpointDiscoveryHandler(DatabaseHelper.connectionDao(), scope)
+    }
 
-    private suspend fun startAdvertising() {
+    private fun startAdvertising() {
         if (!permissionState.checkAllGranted() || advertising) { return }
         Timber.d("Starting Advertising")
         advertising = true
         client.startAdvertising(
-            PreferenceHelper.getUserString(),
+            runBlocking { PreferenceHelper.getUserString() },
             SERVICE_ID,
             connectionLifecycleCallback,
             advertisingOptions
         )
     }
 
-    fun startDiscovery() {
+    private fun startDiscovery() {
         if (!permissionState.checkAllGranted() || discovering) { return }
         Timber.d("Starting Discovery")
         discovering = true
@@ -109,7 +112,7 @@ object ConnectionHelper: DefaultLifecycleObserver {
         )
     }
 
-    fun stopDiscovery() {
+    private fun stopDiscovery() {
         Timber.d("Stopping Discovery")
         discovering = false
         client.stopDiscovery()
@@ -118,31 +121,30 @@ object ConnectionHelper: DefaultLifecycleObserver {
     fun initialize(context: Context) {
         Timber.d("Initializing ConnectionHelper")
         client = Nearby.getConnectionsClient(context)
-
         scope.launch {
-            launch { startAdvertising() }
-            launch { startDiscovery() }
+            DatabaseHelper.connectionDao().clear()
+
+            startAdvertising()
+            startDiscovery()
         }
     }
 
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
 
-        scope.launch {
-            startAdvertising()
-            startDiscovery()
-        }
+        startAdvertising()
+        startDiscovery()
     }
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
-        client.stopDiscovery()
+        stopDiscovery()
         client.stopAdvertising()
     }
 
     fun terminate() {
         client.stopAllEndpoints()
-        client.stopDiscovery()
+        stopDiscovery()
         client.stopAdvertising()
     }
 }

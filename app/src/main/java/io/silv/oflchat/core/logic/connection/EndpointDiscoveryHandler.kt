@@ -10,6 +10,7 @@ import io.silv.oflchat.core.model.toUpdate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import timber.log.Timber
 
 class EndpointDiscoveryHandler(
     private val connectionDao: ConnectionDao,
@@ -19,59 +20,38 @@ class EndpointDiscoveryHandler(
         scope.launch {
             val existing = connectionDao.selectByUserId(info.uuid)
             if (existing != null) {
-                updateExistingConnection(existing, info)
+                connectionDao.update(
+                    existing.copy(
+                        endpointId = eid,
+                        lastUpdateDate = Clock.System.now(),
+                        shouldNotify = true,
+                        status = when(existing.status) {
+                            NOT_CONNECTED, LOST -> NOT_CONNECTED
+                            else -> existing.status
+                        }
+                    )
+                        .toUpdate()
+                )
             } else {
-                createConnection(eid, info)
+                connectionDao.insert(
+                    ConnectionEntity(
+                        endpointId = eid,
+                        userId = info.uuid,
+                        username = info.name,
+                        status = NOT_CONNECTED,
+                        lastUpdateDate = Clock.System.now(),
+                        shouldNotify = true
+                    )
+                )
             }
         }
     }
 
     override fun onEndpointLost(eid: String) {
         scope.launch {
-            updateConnectionLost(eid)
+            connectionDao.selectByEndpointId(eid)?.let { connection ->
+                Timber.d(connection.status.toString())
+            }
         }
-    }
-
-    private suspend fun updateConnectionLost(eid: String) {
-        connectionDao.selectByEndpointId(eid)?.let {
-            connectionDao.update(
-                it.copy(status = LOST).toUpdate()
-            )
-        }
-    }
-
-    private suspend fun updateExistingConnection(
-        existing: ConnectionEntity,
-        info: DiscoveredEndpointInfo,
-    ) {
-        connectionDao.update(
-            existing.copy(
-                userId = info.uuid,
-                username = info.name,
-                lastUpdateDate = Clock.System.now(),
-                shouldNotify = true,
-                status = when(existing.status) {
-                    NOT_CONNECTED, LOST -> NOT_CONNECTED
-                    else -> existing.status
-                }
-            )
-                .toUpdate()
-        )
-    }
-
-    private suspend fun createConnection(
-        eid: String,
-        info: DiscoveredEndpointInfo,
-    ) {
-        connectionDao.insert(
-            ConnectionEntity(
-                endpointId = eid,
-                userId = info.uuid,
-                username = info.name,
-                status = NOT_CONNECTED,
-                lastUpdateDate = Clock.System.now(),
-                shouldNotify = true
-            )
-        )
     }
 }

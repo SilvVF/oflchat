@@ -11,7 +11,6 @@ import kotlinx.datetime.Instant
 class ConnectionDao(
     private val handler: DatabaseHandler
 ) {
-
     private val mapEntity = {
             endpoint_id: String,
             user_id: String,
@@ -43,7 +42,7 @@ class ConnectionDao(
         }
     }
 
-    suspend fun clear() = handler.await { connectionQueries.clear() }
+    suspend fun clear() = handler.await(true) { connectionQueries.clear() }
 
     suspend fun selectByUserId(uid: String): ConnectionEntity? {
         return handler.awaitOneOrNull {

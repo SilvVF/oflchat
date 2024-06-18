@@ -12,9 +12,6 @@ CREATE TABLE Connection (
     PRIMARY KEY (endpoint_id, user_id)
 );
 
-clear:
-DELETE FROM Connection;
-
 insert:
 INSERT OR REPLACE INTO Connection(endpoint_id, user_id, user_name, last_update_date, status, should_notify)
 VALUES (?, ?, ?, ?, ?, ?);
@@ -39,3 +36,6 @@ SELECT last_insert_rowid();
 
 selectAll:
 SELECT * FROM Connection;
+
+clear:
+DELETE FROM Connection;

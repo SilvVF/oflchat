@@ -85,4 +85,5 @@ object DatabaseHelper {
     private val connectionDao by lazy { ConnectionDao(handler) }
 
     fun connectionDao(): ConnectionDao = connectionDao
+
 }

@@ -26,7 +26,7 @@ class ConnectionsScreenModel(
         .map { connections ->
             connections
                 .groupBy { con -> con.username.first() }
-                .mapKeys { firstLetter -> firstLetter.toString() }
+                .mapKeys { (firstLetter, _) -> firstLetter.toString() }
                 .mapValues { (_, cons) ->
                     cons.sortedBy { con -> con.username }
                 }
