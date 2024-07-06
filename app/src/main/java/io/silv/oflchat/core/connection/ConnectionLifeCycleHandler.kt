@@ -4,7 +4,6 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
-import io.silv.oflchat.core.call.SignalingServer
 import io.silv.oflchat.core.database.ConnectionDao
 import io.silv.oflchat.core.model.ConnectionEntity
 import io.silv.oflchat.core.model.ConnectionEntity.State

@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Capturer
@@ -267,7 +268,7 @@ class WebRtcSessionManagerImpl(
         val offer = peerConnection.createOffer().getOrThrow()
         val result = peerConnection.setLocalDescription(offer)
         result.onSuccess {
-            signalingClient.sendCommand(SignalingCommand.OFFER, offer.description)
+            signalingClient.handleOffer(offer)
         }
         logger.d { "[SDP] send offer: ${offer.stringify()}" }
     }
@@ -279,7 +280,7 @@ class WebRtcSessionManagerImpl(
         val answer = peerConnection.createAnswer().getOrThrow()
         val result = peerConnection.setLocalDescription(answer)
         result.onSuccess {
-            signalingClient.sendCommand(SignalingCommand.ANSWER, answer.description)
+            signalingClient.handleAnswer(answer)
         }
         logger.d { "[SDP] send answer: ${answer.stringify()}" }
     }

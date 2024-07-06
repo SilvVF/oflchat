@@ -78,12 +78,6 @@ class ConversationViewScreenModel(
         )
 
     fun startCall() {
-        if (sessionManager.offer == null) {
-            PayloadHelper.startCall(
-                endpointId = endpoint.endpointId,
-                sessionManager.signalingClient
-            )
-        }
         sessionManager.onSessionScreenReady()
     }
 
