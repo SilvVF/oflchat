@@ -8,6 +8,15 @@ message Settings {
   int32 example_counter = 1;
 }
 
+message RtcSignal {
+  string message = 1;
+}
+
+message User {
+  string uuid = 1;
+  string name = 2;
+}
+
 message Message {
   string id = 1;
   string content = 2;

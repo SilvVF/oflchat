@@ -26,7 +26,9 @@ data class ProtoData(
 }
 
 enum class ProtoType {
-    Message;
+    Message,
+    User,
+    RTC;
 
     companion object {
         fun unwrap(byteArray: ByteArray): ProtoData {

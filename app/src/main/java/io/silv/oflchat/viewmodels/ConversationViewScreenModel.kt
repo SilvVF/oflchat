@@ -1,9 +1,18 @@
 package io.silv.oflchat.viewmodels
 
+import android.content.Context
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.silv.oflchat.core.cache.AudioCache
+import io.silv.oflchat.core.call.SignalingClient
+import io.silv.oflchat.core.call.StreamPeerConnectionFactory
+import io.silv.oflchat.core.call.WebRtcSessionManager
+import io.silv.oflchat.core.call.WebRtcSessionManagerImpl
+import io.silv.oflchat.core.model.ConnectionEntity
 import io.silv.oflchat.core.model.ConversationEntity
 import io.silv.oflchat.core.model.transmit.Stream
 import io.silv.oflchat.helpers.MediaHelper
@@ -20,15 +29,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
+import java.sql.Connection
 
 class ConversationViewScreenModel(
     private val conversationId: Long,
-    private val endpointId: String,
+    private val endpoint: ConnectionEntity,
 ): ScreenModel, EventProducer<Unit> by EventProducer.default() {
 
     val audioAttachments = mutableStateListOf<File>()
 
     val recorderState = MediaHelper.RecorderState()
+
+    var manager: WebRtcSessionManager? by mutableStateOf(null)
 
     init {
         recorderState.events.onEach { event ->
@@ -67,11 +79,21 @@ class ConversationViewScreenModel(
         screenModelScope.launch {
             Stream.wrap(Stream.StreamType.AUDIO, file).use {
                 PayloadHelper.stream(
-                    endpointId = endpointId,
+                    endpointId = endpoint.endpointId,
                     inputStream = it
                 )
             }
         }
+    }
+
+    fun startCall(context: Context) {
+        if (manager != null) return
+
+        manager = WebRtcSessionManagerImpl(
+            context,
+            SignalingClient(endpoint.endpointId),
+            StreamPeerConnectionFactory(context)
+        )
     }
 
     override fun onDispose() {
@@ -80,5 +102,6 @@ class ConversationViewScreenModel(
         audioAttachments.forEach {
             it.deleteRecursively()
         }
+        manager?.disconnect()
     }
 }

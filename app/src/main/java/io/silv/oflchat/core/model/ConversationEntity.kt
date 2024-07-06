@@ -1,6 +1,7 @@
 package io.silv.oflchat.core.model
 
 import kotlinx.datetime.Instant
+import java.io.Serializable
 
 data class MemberEntity(
     val user: String,
@@ -71,7 +72,7 @@ data class ConnectionEntity(
     val lastUpdateDate: Instant,
     val status: State,
     val shouldNotify: Boolean,
-) {
+): Serializable {
 
     enum class State {
         /** Default - No connection state */

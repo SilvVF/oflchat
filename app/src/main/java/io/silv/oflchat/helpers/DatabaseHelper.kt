@@ -8,10 +8,12 @@ import io.silv.Connection
 import io.silv.Conversation
 import io.silv.Database
 import io.silv.Member
+import io.silv.User
 import io.silv.oflchat.applicationContext
 import io.silv.oflchat.core.AndroidDatabaseHandler
 import io.silv.oflchat.core.DatabaseHandler
 import io.silv.oflchat.core.database.ConnectionDao
+import io.silv.oflchat.core.database.UserDao
 import io.silv.oflchat.core.model.MemberEntity
 import kotlinx.datetime.Instant
 
@@ -46,7 +48,6 @@ object DatabaseHelper {
 
     internal val InstantAdapter = object : ColumnAdapter<Instant, Long> {
         override fun decode(databaseValue: Long): Instant = Instant.fromEpochMilliseconds(databaseValue)
-
         override fun encode(value: Instant): Long = value.toEpochMilliseconds()
     }
 
@@ -76,6 +77,13 @@ object DatabaseHelper {
                 ),
                 MemberAdapter = Member.Adapter(
                     roleAdapter = MemberRoleAdapter
+                ),
+                UserAdapter = User.Adapter(
+                    accent_idAdapter = object : ColumnAdapter<Int, Long> {
+                        override fun encode(value: Int): Long = value.toLong()
+                        override fun decode(databaseValue: Long): Int = databaseValue.toInt()
+                    },
+                    connection_statusAdapter = EnumColumnAdapter()
                 )
             ),
             driver = driver
@@ -83,7 +91,9 @@ object DatabaseHelper {
     }
 
     private val connectionDao by lazy { ConnectionDao(handler) }
+    private val userDao by lazy { UserDao(handler) }
 
     fun connectionDao(): ConnectionDao = connectionDao
 
+    fun userDao(): UserDao = userDao
 }

@@ -42,7 +42,7 @@ class ConnectionDao(
         }
     }
 
-    suspend fun clear() = handler.await(true) { connectionQueries.clear() }
+    suspend fun clear() = handler.await { connectionQueries.clear() }
 
     suspend fun selectByUserId(uid: String): ConnectionEntity? {
         return handler.awaitOneOrNull {

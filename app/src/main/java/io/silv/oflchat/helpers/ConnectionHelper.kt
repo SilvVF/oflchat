@@ -13,8 +13,8 @@ import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.Strategy
 import io.silv.oflchat.OflChatApp
 import io.silv.oflchat.applicationContext
-import io.silv.oflchat.core.logic.connection.ConnectionLifeCycleHandler
-import io.silv.oflchat.core.logic.connection.EndpointDiscoveryHandler
+import io.silv.oflchat.core.connection.ConnectionLifeCycleHandler
+import io.silv.oflchat.core.connection.EndpointDiscoveryHandler
 import io.silv.oflchat.state_holders.PermissionState
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope

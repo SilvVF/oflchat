@@ -1,4 +1,4 @@
-package io.silv.oflchat.core.logic.connection
+package io.silv.oflchat.core.connection
 
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -64,14 +64,14 @@ class ConnectionLifeCycleHandler(
                 ).toUpdate()
             )
 
-            if (resolution.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
-                var i = 0
-                while (true) {
-                    PayloadHelper.sendString(eid, "Test message $i")
-                    i += 1
-                    delay(3000)
-                }
-            }
+//            if (resolution.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
+//                var i = 0
+//                while (true) {
+//                    PayloadHelper.sendMessage(eid, "Test message $i")
+//                    i += 1
+//                    delay(3000)
+//                }
+//            }
         }
     }
 

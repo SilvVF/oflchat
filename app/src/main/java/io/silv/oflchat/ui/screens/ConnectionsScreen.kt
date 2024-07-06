@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -106,9 +107,9 @@ object ConnectionsScreen: Screen {
             snackbarHostStateProvider = { snackbarHostState },
             navigateBack = { navigator.pop() },
             initiateConnection =  screenModel::connect,
-            navigateToConversation = {
+            navigateToConversation = { endpoint ->
                 navigator.replace(
-                    ConversationViewScreen(-1L, it)
+                    ConversationViewScreen(-1L, endpoint)
                 )
             },
             endpoints = endpoints
@@ -121,7 +122,7 @@ private fun ConnectionsScreenContent(
     snackbarHostStateProvider: () -> SnackbarHostState,
     navigateBack: () -> Unit,
     initiateConnection: (id: String) -> Unit,
-    navigateToConversation: (endpoint: String) -> Unit,
+    navigateToConversation: (endpoint: ConnectionEntity) -> Unit,
     endpoints: List<Pair<String, List<ConnectionEntity>>>,
 ) {
     Scaffold(
@@ -251,7 +252,7 @@ private fun ConnectionsScreenContent(
                             }
                             BLOCKED -> { Text("BLOCKED") }
                             IGNORED -> { Text("IGNORED") }
-                            ACCEPTED ->{ Text("ACCEPTED") }
+                            ACCEPTED ->{ Text("ACCEPTED", Modifier.clickable { navigateToConversation(endpoint) }) }
                         }
                     }
                 }

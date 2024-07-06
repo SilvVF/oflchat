@@ -1,4 +1,4 @@
-package io.silv.oflchat.core.logic.connection
+package io.silv.oflchat.core.connection
 
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
