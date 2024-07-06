@@ -34,15 +34,17 @@ import java.sql.Connection
 class ConversationViewScreenModel(
     private val conversationId: Long,
     private val endpoint: ConnectionEntity,
+    val sessionManager: WebRtcSessionManager,
 ): ScreenModel, EventProducer<Unit> by EventProducer.default() {
 
     val audioAttachments = mutableStateListOf<File>()
 
     val recorderState = MediaHelper.RecorderState()
 
-    var manager: WebRtcSessionManager? by mutableStateOf(null)
-
     init {
+
+        PayloadHelper.signalingClients[endpoint.endpointId] = sessionManager.signalingClient
+
         recorderState.events.onEach { event ->
             when(event) {
                 is MediaHelper.RecorderEvent.AudioCreated -> {
@@ -75,6 +77,16 @@ class ConversationViewScreenModel(
             initialValue = emptyList()
         )
 
+    fun startCall() {
+        if (sessionManager.offer == null) {
+            PayloadHelper.startCall(
+                endpointId = endpoint.endpointId,
+                sessionManager.signalingClient
+            )
+        }
+        sessionManager.onSessionScreenReady()
+    }
+
     fun sendAudio(file: File) {
         screenModelScope.launch {
             Stream.wrap(Stream.StreamType.AUDIO, file).use {
@@ -86,22 +98,11 @@ class ConversationViewScreenModel(
         }
     }
 
-    fun startCall(context: Context) {
-        if (manager != null) return
-
-        manager = WebRtcSessionManagerImpl(
-            context,
-            SignalingClient(endpoint.endpointId),
-            StreamPeerConnectionFactory(context)
-        )
-    }
-
     override fun onDispose() {
         super.onDispose()
         recorderState.dispose()
         audioAttachments.forEach {
             it.deleteRecursively()
         }
-        manager?.disconnect()
     }
 }

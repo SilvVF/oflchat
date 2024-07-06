@@ -9,6 +9,7 @@ import io.silv.oflchat.RtcSignal
 import io.silv.oflchat.User
 import io.silv.oflchat.core.cache.AudioCache
 import io.silv.oflchat.core.call.SignalingClient
+import io.silv.oflchat.core.call.SignalingServer
 import io.silv.oflchat.core.database.UserDao
 import io.silv.oflchat.core.model.transmit.ProtoType
 import io.silv.oflchat.core.model.transmit.ProtoType.*
@@ -39,7 +40,8 @@ object PayloadHelper {
     private val userDao: UserDao
         get() = DatabaseHelper.userDao()
 
-    private val signalingClients = ConcurrentHashMap<String, SignalingClient>()
+    val servers = ConcurrentHashMap<String, SignalingServer>()
+    val signalingClients = ConcurrentHashMap<String, SignalingClient>()
 
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineName("EventQueueScope"))
 
@@ -54,6 +56,10 @@ object PayloadHelper {
                 launch(scope.coroutineContext) { task() }
             }
         }
+    }
+
+    fun startCall(endpointId: String, signalingClient: SignalingClient) {
+        servers[endpointId] = SignalingServer(endpointId, signalingClient)
     }
 
     fun stop() {
@@ -94,7 +100,9 @@ object PayloadHelper {
                                 .mergeFrom(data)
                                 .build()
 
-                            signalingClients[id]?.handleCommand(signal.message)
+                            servers[id]
+                                ?.onMessage(signal.message)
+                                ?: signalingClients[id]?.handleCommand(signal.message)
                         }
                     }
                 }
@@ -131,7 +139,7 @@ object PayloadHelper {
         }
     }
 
-    private fun send(endpointId: String, byteArray: ByteArray) {
+    fun send(endpointId: String, byteArray: ByteArray) {
        client.sendPayload(
             endpointId,
             Payload.fromBytes(byteArray)
@@ -139,15 +147,19 @@ object PayloadHelper {
     }
 
     fun sendRtcSignal(endpointId: String, data: String) {
-        send(
-            endpointId,
-            ProtoType.RTC.wrap(
-                RtcSignal.newBuilder()
-                    .setMessage(data)
-                    .build()
-                    .toByteArray()
+        if (servers[endpointId] != null) {
+            servers[endpointId]?.onMessage(data)
+        } else {
+            send(
+                endpointId,
+                ProtoType.RTC.wrap(
+                    RtcSignal.newBuilder()
+                        .setMessage(data)
+                        .build()
+                        .toByteArray()
+                )
             )
-        )
+        }
     }
 
     fun sendMessage(endpointId: String, data: String) {

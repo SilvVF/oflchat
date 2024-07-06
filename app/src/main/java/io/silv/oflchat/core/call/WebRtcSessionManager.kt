@@ -49,6 +49,8 @@ import java.util.UUID
 
 interface WebRtcSessionManager {
 
+    var offer: String?
+
     val signalingClient: SignalingClient
 
     val peerConnectionFactory: StreamPeerConnectionFactory
@@ -169,7 +171,7 @@ class WebRtcSessionManagerImpl(
         )
     }
 
-    private var offer: String? = null
+    override var offer: String? = null
 
     private val peerConnection: StreamPeerConnection by lazy {
         peerConnectionFactory.makePeerConnection(

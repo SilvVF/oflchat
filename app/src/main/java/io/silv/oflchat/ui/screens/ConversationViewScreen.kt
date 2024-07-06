@@ -17,6 +17,7 @@ import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
 import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,8 +47,12 @@ import cafe.adriel.voyager.core.lifecycle.DisposableEffectIgnoringConfiguration
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import io.silv.oflchat.core.call.LocalWebRtcSessionManager
+import io.silv.oflchat.core.call.SignalingClient
+import io.silv.oflchat.core.call.StreamPeerConnectionFactory
+import io.silv.oflchat.core.call.WebRtcSessionManagerImpl
 import io.silv.oflchat.core.model.ConnectionEntity
 import io.silv.oflchat.helpers.MediaHelper
+import io.silv.oflchat.helpers.PayloadHelper
 import io.silv.oflchat.viewmodels.ConversationViewScreenModel
 import kotlinx.coroutines.delay
 
@@ -59,10 +64,22 @@ data class ConversationViewScreen(
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel { ConversationViewScreenModel(conversationId, endpoint) }
+
+        val context = LocalContext.current
+        val screenModel = rememberScreenModel {
+            ConversationViewScreenModel(
+                conversationId,
+                endpoint,
+                WebRtcSessionManagerImpl(
+                    context,
+                    SignalingClient(endpoint.endpointId),
+                    StreamPeerConnectionFactory(context)
+                )
+            )
+        }
 
         CompositionLocalProvider(
-            LocalWebRtcSessionManager provides screenModel.manager
+            LocalWebRtcSessionManager provides screenModel.sessionManager
         ) {
             ConversationView(screenModel = screenModel)
         }
@@ -80,10 +97,6 @@ fun ConversationView(
     val conversation by screenModel.conversation.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        delay(3000)
-        screenModel.startCall(context)
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -104,13 +117,11 @@ fun ConversationView(
             LazyColumn {
                 item(key = "rtc-session-info") {
                     val manager = LocalWebRtcSessionManager.current
+                    val sessionState by manager.signalingClient.sessionStateFlow.collectAsState()
 
-                    if (manager != null) {
-
-                        val sessionState by manager.signalingClient.sessionStateFlow.collectAsState()
-
-                        Text(text = sessionState.toString())
-                    }
+                    Text(
+                        text = sessionState.toString(),
+                        Modifier.clickable { screenModel.startCall() })
                 }
                 items(items) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

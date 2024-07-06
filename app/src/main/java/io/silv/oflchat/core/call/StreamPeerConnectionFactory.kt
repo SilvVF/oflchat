@@ -62,10 +62,7 @@ class StreamPeerConnectionFactory(
 
     // rtcConfig contains STUN and TURN servers list
     val rtcConfig = PeerConnection.RTCConfiguration(
-        arrayListOf(
-            // adding google's standard server
-            PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
-        )
+        emptyList()
     ).apply {
         // it's very important to use new unified sdp semantics PLAN_B is deprecated
         sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN

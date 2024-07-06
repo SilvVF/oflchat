@@ -16,10 +16,14 @@ package io.silv.oflchat.core.call
  * limitations under the License.
  */
 
+import io.silv.oflchat.RtcSignal
+import io.silv.oflchat.core.model.transmit.ProtoType
+import io.silv.oflchat.core.model.transmit.wrap
 import io.silv.oflchat.d
 import io.silv.oflchat.helpers.PayloadHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,8 +31,113 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
+import java.util.UUID
 
+class SignalingServer(
+    private val endpointId: String,
+    private val signalingClient: SignalingClient,
+) {
+
+    private val sessionManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val mutex = Mutex()
+
+    private var sessionState: WebRTCSessionState = WebRTCSessionState.Impossible
+
+    init {
+        sessionManagerScope.launch {
+            mutex.withLock {
+                sessionState = WebRTCSessionState.Ready
+            }
+            notifyAboutStateUpdate()
+        }
+    }
+
+    fun onMessage(message: String) {
+        when {
+            message.startsWith(MessageType.STATE.toString(), true) -> handleState()
+            message.startsWith(MessageType.OFFER.toString(), true) -> handleOffer(message)
+            message.startsWith(MessageType.ANSWER.toString(), true) -> handleAnswer(message)
+            message.startsWith(MessageType.ICE.toString(), true) -> handleIce(message)
+        }
+    }
+
+    private fun handleState() {
+        sessionManagerScope.launch {
+           PayloadHelper.sendRtcSignal(endpointId , "${MessageType.STATE} $sessionState")
+        }
+    }
+
+    private fun handleOffer(message: String) {
+        if (sessionState != WebRTCSessionState.Ready) {
+            error("Session should be in Ready state to handle offer")
+        }
+        sessionState = WebRTCSessionState.Creating
+        notifyAboutStateUpdate()
+        PayloadHelper.send(
+            endpointId,
+            ProtoType.RTC.wrap(
+                RtcSignal
+                    .newBuilder()
+                    .setMessage(message)
+                    .build()
+                    .toByteArray()
+            )
+        )
+    }
+
+    private fun handleAnswer(message: String) {
+        if (sessionState != WebRTCSessionState.Creating) {
+            error("Session should be in Creating state to handle answer")
+        }
+        signalingClient.handleCommand(message)
+        sessionState = WebRTCSessionState.Active
+        notifyAboutStateUpdate()
+    }
+
+    private fun handleIce(message: String) {
+        signalingClient.handleCommand(message)
+    }
+
+    fun onSessionClose() {
+        sessionManagerScope.launch {
+            mutex.withLock {
+                sessionState = WebRTCSessionState.Impossible
+                notifyAboutStateUpdate()
+            }
+        }
+    }
+
+    enum class WebRTCSessionState {
+        Active, // Offer and Answer messages has been sent
+        Creating, // Creating session, offer has been sent
+        Ready, // Both clients available and ready to initiate session
+        Impossible // We have less than two clients
+    }
+
+    enum class MessageType {
+        STATE,
+        OFFER,
+        ANSWER,
+        ICE
+    }
+
+    private fun notifyAboutStateUpdate() {
+        PayloadHelper.send(
+            endpointId,
+            ProtoType.RTC.wrap(
+                RtcSignal
+                    .newBuilder()
+                    .setMessage("${MessageType.STATE} $sessionState")
+                    .build()
+                    .toByteArray()
+            )
+        )
+        signalingClient.handleCommand("${MessageType.STATE} $sessionState")
+    }
+}
 
 
 class SignalingClient(

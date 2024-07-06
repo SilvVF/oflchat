@@ -11,6 +11,7 @@ import io.silv.oflchat.d
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import timber.log.Timber
@@ -59,7 +60,12 @@ class EndpointDiscoveryHandler(
         onLostTasks[eid] = scope.launch {
             delay(3000)
 
+            ensureActive()
+
             connectionDao.selectByEndpointId(eid)?.let { connection ->
+
+                ensureActive()
+
                 if (connection.status !in listOf(PENDING, SENT, ACCEPTED)) {
                     connectionDao.update(connection.toUpdate().copy(status = LOST))
                 } else {

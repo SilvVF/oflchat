@@ -5,6 +5,6 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.staticCompositionLocalOf
 
-val LocalWebRtcSessionManager: ProvidableCompositionLocal<WebRtcSessionManager?> =
-    staticCompositionLocalOf { null }
+val LocalWebRtcSessionManager: ProvidableCompositionLocal<WebRtcSessionManager> =
+    staticCompositionLocalOf { error("not provided") }
 
